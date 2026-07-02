@@ -16,25 +16,6 @@ const HEROES = [
   { id:9, name:'ウルトラマン', col:'#3b82f6', acc:'#c0c0c0', emoji:'⭐', desc:'アルティメット！'  },
 ];
 
-// ─── PNG白背景除去 ───
-function removeWhiteBg(img, threshold = 185, tol = 22) {
-  const cv = document.createElement('canvas');
-  cv.width = img.naturalWidth; cv.height = img.naturalHeight;
-  const ctx = cv.getContext('2d');
-  ctx.drawImage(img, 0, 0);
-  const d = ctx.getImageData(0, 0, cv.width, cv.height);
-  const px = d.data;
-  for (let i = 0; i < px.length; i += 4) {
-    const r = px[i], g = px[i+1], b = px[i+2];
-    if (r > threshold && g > threshold && b > threshold &&
-        Math.abs(r-g) < tol && Math.abs(g-b) < tol && Math.abs(r-b) < tol) {
-      px[i+3] = 0;
-    }
-  }
-  ctx.putImageData(d, 0, 0);
-  return cv.toDataURL('image/png');
-}
-
 // ─── キャラクター画像プリロード ───
 const CHAR_IMGS = {};
 function preloadImages(onDone) {
@@ -50,10 +31,21 @@ function preloadImages(onDone) {
   });
 }
 
+// ─── けいさんモード ───
+const MODES = {
+  kake:  { tab:'✖️ かけざん', sym: n => `×${n}` },
+  tashi: { tab:'➕ たしざん', sym: n => `＋${n}` },
+  hiki:  { tab:'➖ ひきざん', sym: n => `−${n}` },
+  mix:   { tab:'🎲 ミックス', sym: () => 'MIX' },
+};
+let curMode = 'kake';
+
 // ─── XP / レベル ───
 const XP_TABLE   = [0, 100, 250, 500, 900, 1400, 2000, 2700, 3500, 4400];
 const ATK_UNLOCK = ['beam','punch','slash','bomb','ultra'];
 const ATK_NAMES  = { beam:'ビーム！', punch:'ストレート！', slash:'スラッシュ！', bomb:'エネルギー弾！', ultra:'ウルトラ必殺技！', ultra_max:'✨ MAX 必殺技！！' };
+// コンボで強い技が出るほど大ダメージ（コンボの意味を持たせる）
+const ATK_DMG    = { beam:1, punch:1, slash:2, bomb:2, ultra:3, ultra_max:4 };
 
 function getLevel(xp) {
   let lv = 1;
@@ -90,8 +82,26 @@ let SAVES = [null, null, null];
 let SAVE_IDX = 0;
 let SAVE = { name:'', heroId:0, totalXp:0, medals:{} };
 
+// 旧メダル形式（ステージ番号→星の数）→ 新形式（"モード+ステージ"→1）へ移行。
+// 旧仕様の星3（ノーミス）だけを かけざんメダルとして引き継ぐ
+function migrateMedals(s) {
+  if (!s || !s.medals) return s;
+  for (const k of Object.keys(s.medals)) {
+    if (/^\d+$/.test(k)) {
+      if (s.medals[k] >= 3) s.medals['kake' + k] = 1;
+      delete s.medals[k];
+    }
+  }
+  return s;
+}
+function medalCount(s) {
+  return Object.values((s && s.medals) || {}).filter(Boolean).length;
+}
+
 function loadSaves() {
-  try { return JSON.parse(localStorage.getItem(SAVES_KEY)) || [null, null, null]; }
+  try {
+    return (JSON.parse(localStorage.getItem(SAVES_KEY)) || [null, null, null]).map(migrateMedals);
+  }
   catch { return [null, null, null]; }
 }
 function writeSaves() { localStorage.setItem(SAVES_KEY, JSON.stringify(SAVES)); }
@@ -125,6 +135,7 @@ const ENEMIES = [
 
 // ─── ゲーム状態 ───
 let G = {
+  mode:'kake',
   stage:0, heroHp:5, heroMaxHp:5,
   enemyHp:0, enemyMaxHp:0,
   score:0, combo:0, bestCombo:0,
@@ -157,14 +168,6 @@ function showScreen(id) {
   $(id).classList.remove('hidden');
 }
 
-// ─── カラーユーティリティ ───
-function lightenHex(hex, amt = 60) {
-  const r = Math.min(255, parseInt(hex.slice(1,3)||'80',16) + amt);
-  const g = Math.min(255, parseInt(hex.slice(3,5)||'80',16) + amt);
-  const b = Math.min(255, parseInt(hex.slice(5,7)||'80',16) + amt);
-  return `rgb(${r},${g},${b})`;
-}
-
 // ─── タイトル ───
 function initTitle() {
   SAVES = loadSaves();
@@ -181,6 +184,12 @@ function showSaveSelect() {
   showScreen('screen-save-select');
   spawnTitleStars('save-stars');
   renderSaveSlots();
+}
+
+// 名前に < > " 等が入っても表示が壊れないようにエスケープ
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, ch =>
+    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
 }
 
 function renderSaveSlots() {
@@ -205,8 +214,8 @@ function renderSaveSlots() {
              style="background-image:url('${HERO_SEL_URL}');background-position:${bpx}% ${bpy}%"></div>
         <div class="save-slot-info" onclick="loadSaveSlot(${i})">
           <span class="save-slot-num">No.${i+1}</span>
-          <span class="save-name">${s.name}</span>
-          <span class="save-stats">${hero ? hero.emoji + ' ' + hero.name : ''} ／ LV.${lv} ／ XP:${s.totalXp||0}</span>
+          <span class="save-name">${escapeHtml(s.name)}</span>
+          <span class="save-stats">${hero ? hero.emoji + ' ' : ''}LV.${lv} ／ 🏅×${medalCount(s)}</span>
         </div>
         <button class="save-delete-btn" onclick="event.stopPropagation();confirmDeleteSave(${i})">🗑 けす</button>
       `;
@@ -227,7 +236,7 @@ function loadSaveSlot(idx) {
   SAVE_IDX = idx;
   SAVE = SAVES[idx];
   if (!SAVE.medals) SAVE.medals = {};
-  showHeroSelect(false);
+  showHome();
 }
 
 function newSaveSlot(idx) {
@@ -295,13 +304,45 @@ function selectHeroCell(id) {
 function updateHeroSelectName() {
   const h = HEROES[_selectedHeroId];
   const el = $('hero-select-name');
-  if (el && h) el.textContent = `${h.emoji} ${h.name} ― ${h.desc}`;
+  if (el && h) el.textContent = `${h.emoji} ${h.desc}`;
 }
 
 function confirmHeroSelect() {
   SAVE.heroId = _selectedHeroId;
   writeSave();
-  startGame();
+  showHome();
+}
+
+// ─── ホーム（モード＆ステージ選択） ───
+function showHome() {
+  showScreen('screen-home');
+  spawnTitleStars('home-stars');
+  BGM.play('title');
+  $('home-player-info').textContent = `${SAVE.name}　LV.${getLevel(SAVE.totalXp)}　🏅×${medalCount(SAVE)}`;
+  renderModeTabs();
+  renderStageGrid();
+}
+
+function renderModeTabs() {
+  document.querySelectorAll('.mode-tab').forEach(b =>
+    b.classList.toggle('selected', b.dataset.mode === curMode)
+  );
+}
+
+function renderStageGrid() {
+  const grid = $('stage-grid');
+  grid.innerHTML = '';
+  ENEMIES.forEach((en, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'stage-btn';
+    const medal = SAVE.medals[`${curMode}${i}`] ? '🏅' : '';
+    btn.innerHTML = `
+      <span class="stage-emoji">${en.emoji}</span>
+      <span class="stage-num">ST.${i+1} ${MODES[curMode].sym(en.mult)}</span>
+      <span class="stage-medal">${medal}</span>`;
+    btn.addEventListener('click', () => startGame(i));
+    grid.appendChild(btn);
+  });
 }
 
 function spawnTitleStars(containerId = 'title-stars') {
@@ -320,145 +361,6 @@ function spawnTitleStars(containerId = 'title-stars') {
     st.textContent = '@keyframes starTwinkle{from{opacity:0.1}to{opacity:0.9}}';
     document.head.appendChild(st);
   }
-}
-
-// ─── キャラクター選択 ───
-function initCharSelect() {
-  showScreen('screen-char-select');
-  const grid = $('char-grid');
-  grid.innerHTML = '';
-  HEROES.forEach((hero, i) => grid.appendChild(buildCharCard(hero, i)));
-}
-
-function buildCharCard(hero, i) {
-  const card = document.createElement('div');
-  card.className = 'char-card' + (SAVE.heroId === i ? ' selected' : '');
-  card.dataset.id = i;
-
-  const imgKey = `hero_${i}`;
-  if (CHAR_IMGS[imgKey]) {
-    const el = document.createElement('img');
-    el.src = CHAR_IMGS[imgKey].src;
-    card.appendChild(el);
-  } else {
-    const mini = document.createElement('canvas');
-    mini.width = 80; mini.height = 80;
-    const mc = mini.getContext('2d');
-    // 背景円
-    mc.fillStyle = hero.col + '30';
-    mc.beginPath(); mc.arc(40, 40, 38, 0, Math.PI*2); mc.fill();
-    mc.fillStyle = hero.col + '60';
-    mc.beginPath(); mc.arc(40, 40, 26, 0, Math.PI*2); mc.fill();
-    // 絵文字
-    mc.font = '28px serif';
-    mc.textAlign = 'center'; mc.textBaseline = 'middle';
-    mc.fillText(hero.emoji, 40, 40);
-    card.appendChild(mini);
-  }
-
-  card.innerHTML += `<p class="cname">${hero.name}</p><p class="cdesc">${hero.desc}</p>`;
-
-  const select = () => {
-    document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
-    card.classList.add('selected');
-    SAVE.heroId = i;
-  };
-  card.addEventListener('click', select);
-  card.addEventListener('touchend', e => { e.preventDefault(); select(); });
-  return card;
-}
-
-// ─── ヒーロー描画（Canvas fallback） ───
-function drawHeroCanvas(c, x, y, scale, flash, offsetX, heroId) {
-  const hero = HEROES[heroId] || HEROES[0];
-  const c1 = flash > 0 ? '#ff6666' : hero.col;
-  const c2 = flash > 0 ? '#ff3333' : hero.acc;
-  const c3 = flash > 0 ? '#ff9999' : lightenHex(hero.col, 40);
-  const s = 1;
-
-  c.save(); c.translate(x + offsetX, y); c.scale(scale, scale);
-  if (flash > 0) c.globalAlpha = 0.4 + 0.6 * Math.abs(Math.sin(flash * Math.PI * 4));
-
-  // ブーツ
-  c.fillStyle = c2;
-  c.beginPath(); c.ellipse(-14*s,50*s,12*s,7*s,0,0,Math.PI*2); c.fill();
-  c.beginPath(); c.ellipse(14*s,50*s,12*s,7*s,0,0,Math.PI*2); c.fill();
-  // 脚
-  c.fillStyle = c3;
-  roundRect(c,-22*s,16*s,16*s,36*s,6*s); roundRect(c,6*s,16*s,16*s,36*s,6*s);
-  c.fillStyle = c2; c.fillRect(-22*s,28*s,16*s,4*s); c.fillRect(6*s,28*s,16*s,4*s);
-  // 胴体
-  c.fillStyle = c1;
-  c.beginPath(); c.moveTo(-26*s,16*s); c.lineTo(26*s,16*s); c.lineTo(22*s,-22*s); c.lineTo(-22*s,-22*s); c.closePath(); c.fill();
-  // V字マーク（ヒーロー固有）
-  c.fillStyle = c2;
-  c.beginPath(); c.moveTo(-18*s,-22*s); c.lineTo(0,-8*s); c.lineTo(18*s,-22*s); c.lineTo(18*s,-12*s); c.lineTo(0,2*s); c.lineTo(-18*s,-12*s); c.closePath(); c.fill();
-  // 胸ジェム
-  c.fillStyle = c2; c.shadowColor = c2; c.shadowBlur = 10;
-  c.beginPath(); c.ellipse(0,4*s,10*s,6*s,0,0,Math.PI*2); c.fill();
-  c.shadowBlur = 0;
-  // 腕
-  c.fillStyle = c3;
-  roundRect(c,-40*s,-20*s,14*s,30*s,6*s); roundRect(c,26*s,-20*s,14*s,30*s,6*s);
-  c.fillStyle = c2; c.fillRect(-40*s,-5*s,14*s,4*s); c.fillRect(26*s,-5*s,14*s,4*s);
-  // こぶし
-  c.fillStyle = c3;
-  c.beginPath(); c.ellipse(-33*s,13*s,9*s,7*s,0,0,Math.PI*2); c.fill();
-  c.beginPath(); c.ellipse(33*s,13*s,9*s,7*s,0,0,Math.PI*2); c.fill();
-  // 頭
-  c.fillStyle = c3; c.shadowColor = c1; c.shadowBlur = 8;
-  c.beginPath(); c.ellipse(0,-34*s,18*s,22*s,0,0,Math.PI*2); c.fill(); c.shadowBlur = 0;
-  // クレスト
-  c.fillStyle = c2;
-  c.beginPath(); c.moveTo(0,-60*s); c.lineTo(-12*s,-42*s); c.lineTo(12*s,-42*s); c.closePath(); c.fill();
-  // 目
-  c.fillStyle = '#f97316';
-  c.beginPath(); c.ellipse(-9*s,-36*s,9*s,5*s,-0.2,0,Math.PI*2); c.fill();
-  c.beginPath(); c.ellipse(9*s,-36*s,9*s,5*s,0.2,0,Math.PI*2); c.fill();
-  c.fillStyle = '#fde68a'; c.globalAlpha = (c.globalAlpha||1) * 0.7;
-  c.beginPath(); c.ellipse(-9*s,-36*s,5*s,3*s,-0.2,0,Math.PI*2); c.fill();
-  c.beginPath(); c.ellipse(9*s,-36*s,5*s,3*s,0.2,0,Math.PI*2); c.fill();
-
-  c.restore();
-}
-
-function roundRect(c, x, y, w, h, r) {
-  c.beginPath();
-  c.moveTo(x+r,y); c.lineTo(x+w-r,y); c.quadraticCurveTo(x+w,y,x+w,y+r);
-  c.lineTo(x+w,y+h-r); c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-  c.lineTo(x+r,y+h); c.quadraticCurveTo(x,y+h,x,y+h-r);
-  c.lineTo(x,y+r); c.quadraticCurveTo(x,y,x+r,y); c.closePath(); c.fill();
-}
-
-// ─── ヒーロー描画（メイン） ───
-function drawHero(c, x, y, scale = 1, flash = 0, offsetX = 0) {
-  const heroId = SAVE.heroId || 0;
-  const img    = CHAR_IMGS[`hero_${heroId}`];
-  if (img) {
-    const h  = (cv ? cv.height * 0.52 : 120) * scale;
-    const dx = x + offsetX - h / 2, dy = y - h;
-    c.save();
-    if (flash > 0) c.globalAlpha = 0.3 + 0.7 * Math.abs(Math.sin(flash * Math.PI * 3));
-    c.drawImage(img, dx, dy, h, h);
-    c.restore();
-    return;
-  }
-  drawHeroCanvas(c, x, y, scale, flash, offsetX, heroId);
-}
-
-// ─── タイトルヒーロー ───
-function drawTitleHero() {
-  const c = $('title-hero-canvas');
-  if (!c) return;
-  const ctx2 = c.getContext('2d');
-  ctx2.clearRect(0, 0, c.width, c.height);
-  const hero = HEROES[SAVE.heroId || 0];
-  const g = ctx2.createRadialGradient(80, 110, 5, 80, 110, 85);
-  g.addColorStop(0, hero.col + '60'); g.addColorStop(1, 'transparent');
-  ctx2.fillStyle = g; ctx2.beginPath(); ctx2.arc(80, 110, 85, 0, Math.PI*2); ctx2.fill();
-  const img = CHAR_IMGS[`hero_${SAVE.heroId || 0}`];
-  if (img) { ctx2.drawImage(img, 8, 10, 144, 180); }
-  else { drawHeroCanvas(ctx2, 80, 175, 1.35, 0, 0, SAVE.heroId || 0); }
 }
 
 // ─── 敵描画 ───
@@ -804,7 +706,7 @@ function drawBattle() {
 
   // 敵 (縦移動・揺れ)
   let enemyShakeX = 0, enemyFlash = 0, deadProg = 0, enemyOffY = 0;
-  if (G.animState === 'enemyHit') { enemyFlash = 1 - t/18; enemyShakeX = Math.sin(t*Math.PI*3)*12; }
+  if (G.animState === 'enemyHit') { enemyFlash = 1 - t/dur; enemyShakeX = Math.sin(t*Math.PI*3)*12; }
   if (G.animState === 'enemyAttack' && en.atk === 'rush') {
     enemyOffY = Math.sin((t/dur)*Math.PI) * cv.height * 0.20;
   }
@@ -823,26 +725,46 @@ function drawBattle() {
 function startBattleLoop() {
   if (rafId) cancelAnimationFrame(rafId);
   function loop() {
+    // 次フレームを先に予約しておく。後から予約すると、onAnimEnd 内の
+    // stopBattleLoop が効かずループが止まらない（enemyDead が毎フレーム
+    // 再発火して showStageClear が連打される）バグになる
+    rafId = requestAnimationFrame(loop);
     G.animT++;
     if (G.questionFlash > 0) G.questionFlash--;
     const dur = getAnimDur(G.animState);
     if (G.animState !== 'idle' && G.animState !== 'heroWin' && G.animT > dur) onAnimEnd();
     drawBattle();
-    rafId = requestAnimationFrame(loop);
   }
   rafId = requestAnimationFrame(loop);
 }
 function stopBattleLoop() { if (rafId) { cancelAnimationFrame(rafId); rafId = null; } }
 function setAnimState(s) { G.animState = s; G.animT = 0; }
 
+// ─── 勝利カットイン（とどめの一撃で選択ヒーローの顔が入る） ───
+function showHeroCutin() {
+  const el = $('hero-cutin');
+  if (!el) return;
+  const hid  = SAVE.heroId || 0;
+  const face = el.querySelector('.cutin-face');
+  face.style.backgroundImage    = `url('${HERO_SEL_URL}')`;
+  face.style.backgroundPosition = `${(hid % 5) * 25}% ${Math.floor(hid / 5) * 100}%`;
+  el.classList.remove('hidden');
+  // アニメーションを再スタート
+  el.querySelectorAll('.cutin-band, .cutin-face, .cutin-text').forEach(n => {
+    n.style.animation = 'none'; void n.offsetWidth; n.style.animation = '';
+  });
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.add('hidden'), 1250);
+}
+
 // ─── アニメーション終了 ───
 function onAnimEnd() {
   switch (G.animState) {
     case 'heroAttack':
       $('attack-beam').classList.add('hidden');
-      G.enemyHp = Math.max(0, G.enemyHp - 1);
+      G.enemyHp = Math.max(0, G.enemyHp - (ATK_DMG[G.heroAttackType] || 1));
       updateHpBars();
-      if (G.enemyHp <= 0) setAnimState('enemyDead');
+      if (G.enemyHp <= 0) { showHeroCutin(); setAnimState('enemyDead'); }
       else                 setAnimState('enemyHit');
       break;
     case 'enemyHit':
@@ -852,7 +774,8 @@ function onAnimEnd() {
     case 'enemyDead':
       SFX.enemyDead();
       stopBattleLoop();
-      setTimeout(() => showStageClear(), 300);
+      // カットイン（約1.2秒）が見終わってから結果画面へ
+      setTimeout(() => showStageClear(), 600);
       break;
     case 'enemyAttack': {
       const dmg = ENEMIES[G.stage]?.dmg ?? 1;
@@ -885,7 +808,7 @@ function startStage(stage) {
   G.combo = 0; G.locked = false;
 
   showScreen('screen-battle');
-  $('stage-label').textContent = `ST.${stage+1}/9 ×${en.mult}`;
+  $('stage-label').textContent = `ST.${stage+1}/9 ${MODES[G.mode] ? MODES[G.mode].sym(en.mult) : ''}`;
   $('enemy-hp-name').textContent = en.name;
   updateHearts(); updateHpBars(); updateXpBar();
   resizeBattleCanvas();
@@ -895,27 +818,51 @@ function startStage(stage) {
   nextQuestion();
 }
 
+let _lastA = 0; // 直前の問題と同じ数を避ける
+
+// モード別に問題を作る（n = ステージの数字 1〜9、段が前にくる形式）
+function makeQuestion(mode, n) {
+  let a;
+  do { a = Math.floor(Math.random()*9)+1; } while (a === _lastA);
+  _lastA = a;
+  const kind = mode === 'mix' ? ['kake','tashi','hiki'][Math.floor(Math.random()*3)] : mode;
+  if (kind === 'kake')  return { kind, n, a, correct: n*a, text: `${n} × ${a} = ?` };
+  if (kind === 'tashi') return { kind, n, a, correct: n+a, text: `${n} + ${a} = ?` };
+  return { kind, n, a, correct: a, text: `${n+a} − ${n} = ?` }; // ひきざん
+}
+
+function makeWrongChoices(q) {
+  const wrongs = new Set();
+  let guard = 0;
+  while (wrongs.size < 3 && guard++ < 60) {
+    let w;
+    if (q.kind === 'kake') {
+      // 同じ段の近い答えを誤答にする（まぎらわしさを出す）
+      w = q.correct + (Math.floor(Math.random()*8)-4)*q.n;
+      if (w <= 0) w = q.correct + q.n*(Math.floor(Math.random()*4)+1);
+    } else {
+      w = q.correct + Math.floor(Math.random()*7) - 3; // ±3
+    }
+    if (w !== q.correct && w > 0) wrongs.add(w);
+  }
+  let fill = q.correct;
+  while (wrongs.size < 3) { fill++; if (fill !== q.correct) wrongs.add(fill); }
+  return [...wrongs];
+}
+
 function nextQuestion() {
   G.locked = false;
   G.questionFlash = 18; // 敵が問題を「撃ってくる」Canvas演出
   const en = ENEMIES[G.stage];
-  const a = Math.floor(Math.random()*9)+1;
-  const correct = a * en.mult;
-  G.question = { a, mult: en.mult, correct };
-  $('question-text').textContent = `${a} × ${en.mult} = ?`;
+  G.question = makeQuestion(G.mode, en.mult);
+  $('question-text').textContent = G.question.text;
   // 問題ボックスの登場アニメーション
   const qbox = $('question-box');
   qbox.classList.remove('question-enter');
   void qbox.offsetWidth;
   qbox.classList.add('question-enter');
 
-  const wrongs = new Set();
-  while (wrongs.size < 3) {
-    let w = correct + (Math.floor(Math.random()*8)-4)*en.mult;
-    if (w <= 0) w = correct + en.mult*(Math.floor(Math.random()*4)+1);
-    if (w !== correct && w > 0) wrongs.add(w);
-  }
-  const choices = [correct, ...wrongs].sort(() => Math.random()-0.5);
+  const choices = [G.question.correct, ...makeWrongChoices(G.question)].sort(() => Math.random()-0.5);
   const wrap = $('choices');
   wrap.innerHTML = '';
   choices.forEach(val => {
@@ -948,7 +895,8 @@ function onAnswer(val, btn) {
 
     G.heroAttackType = selectHeroAttack();
     if (G.heroAttackType === 'beam') $('attack-beam').classList.remove('hidden');
-    showAtkLabel(ATK_NAMES[G.heroAttackType] || '攻撃！');
+    const atkDmg = ATK_DMG[G.heroAttackType] || 1;
+    showAtkLabel((ATK_NAMES[G.heroAttackType] || '攻撃！') + (atkDmg > 1 ? ` 💥×${atkDmg}` : ''));
     setAnimState('heroAttack');
 
     SFX.correct();
@@ -970,7 +918,7 @@ function onAnswer(val, btn) {
     SFX.wrong();
     setTimeout(() => SFX.enemyAttack(ENEMIES[G.stage].atk), 140);
 
-    showMsg(`❌ ざんねん…\n${G.question.a} × ${G.question.mult} = ${G.question.correct}`, '#ef4444');
+    showMsg(`❌ ざんねん…\n${G.question.text.replace('?', G.question.correct)}`, '#ef4444');
   }
 }
 
@@ -1018,28 +966,27 @@ function showStageClear() {
   BGM.stop();
   setTimeout(() => SFX.stageClear(), 100);
   stopBattleLoop();
-  let stars = 0;
-  if (G.stageWrong === 0) stars = 3;
-  else if (G.stageWrong === 1) stars = 2;
-  else if (G.stageWrong <= 3) stars = 1;
+  // ノーミスクリアでメダル獲得（モード×ステージごと）
+  const gotMedal = G.stageWrong === 0;
+  if (gotMedal) SAVE.medals[`${G.mode}${G.stage}`] = 1;
+  writeSave();
 
-  const prev = SAVE.medals[G.stage] || 0;
-  if (stars > prev) { SAVE.medals[G.stage] = stars; writeSave(); }
+  // クリアごとに ❤️1 回復（9連戦の救済）
+  let healed = false;
+  if (G.heroHp < G.heroMaxHp) { G.heroHp++; healed = true; }
 
   showScreen('screen-stage-clear');
   const en = ENEMIES[G.stage];
-  $('clear-detail').textContent = `${en.name} をたおした！`;
+  $('clear-detail').textContent = `${en.name} をたおした！${healed ? '　❤️+1 かいふく！' : ''}`;
   $('clear-icon').textContent = ['🎉','✨','🌟','💪','🔥','⚡','🏆','🎊','👑'][G.stage] || '🎉';
 
-  for (let i = 0; i < 3; i++) {
-    const el = $(`mstar-${i}`);
-    if (!el) continue;
-    el.textContent = i < stars ? '⭐' : '☆';
-    el.className = 'mstar' + (i < stars ? ' lit' : '');
+  const mr = $('medal-result');
+  if (mr) {
+    mr.className = gotMedal ? 'medal-get' : 'medal-miss';
+    mr.textContent = gotMedal ? '🏅 メダル ゲット！' : 'ノーミスクリアで 🏅メダル！';
   }
 
-  const msgs = ['','★ ブロンズ！','★★ シルバー！','★★★ パーフェクト！'];
-  $('score-display').textContent = `スコア: ${G.score}${stars ? '　' + msgs[stars] : ''}`;
+  $('score-display').textContent = `スコア: ${G.score}`;
   const xpEl = $('xp-gained');
   if (xpEl) xpEl.textContent = `LV.${getLevel(SAVE.totalXp)}  総XP: ${SAVE.totalXp}`;
 
@@ -1061,7 +1008,7 @@ function showVictory() {
   stopBattleLoop(); showScreen('screen-victory');
   $('final-score').textContent = `スコア: ${G.score}点  さいこうコンボ: ${G.bestCombo}\nLV.${getLevel(SAVE.totalXp)}  総XP: ${SAVE.totalXp}`;
   const vic = $('vic-medals');
-  if (vic) vic.innerHTML = ENEMIES.map((_,i) => `<span>${'⭐'.repeat(SAVE.medals[i]||0)||'☆'}</span>`).join('');
+  if (vic) vic.innerHTML = ENEMIES.map((_,i) => `<span>${SAVE.medals[`${G.mode}${i}`] ? '🏅' : '☆'}</span>`).join('');
   spawnConfetti();
 }
 
@@ -1298,6 +1245,7 @@ const BGM = (() => {
   let nextTime = 0;
   let beat     = 0;
   let seq      = null;
+  let curName  = null;
   const LOOK   = 0.12;
   const TICK   = 40;
 
@@ -1325,6 +1273,7 @@ const BGM = (() => {
   function _start(name) {
     if (timerId) { clearInterval(timerId); timerId = null; }
     seq = BGM_SEQS[name]; if (!seq) return;
+    curName = name;
     const ac = getAC();
     nextTime = ac.currentTime + 0.05; beat = 0;
     timerId = setInterval(tick, TICK); tick();
@@ -1339,8 +1288,18 @@ const BGM = (() => {
 
   function stop() {
     if (timerId) { clearInterval(timerId); timerId = null; }
-    seq = null; beat = 0; _pendingBgm = null;
+    seq = null; beat = 0; _pendingBgm = null; curName = null;
   }
+
+  // バックグラウンドタブでは setInterval が間引かれ BGM が乱れるため、
+  // 非表示中は停止して復帰時に再開する
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (timerId) { clearInterval(timerId); timerId = null; }
+    } else if (curName) {
+      _start(curName);
+    }
+  });
 
   return { play, stop, _start };
 })();
@@ -1357,8 +1316,17 @@ function initEvents() {
   on('btn-hero-confirm', () => confirmHeroSelect());
   on('btn-next-stage',   () => { if (G.stage >= 8) showVictory(); else startStage(G.stage+1); });
   on('btn-retry',        () => { G.heroHp = 5; G.heroMaxHp = 5; startStage(G.stage); });
-  on('btn-go-title',     () => { stopBattleLoop(); initTitle(); });
-  on('btn-vic-title',    () => initTitle());
+  on('btn-clear-home',   () => showHome());
+  on('btn-go-home',      () => showHome());
+  on('btn-vic-home',     () => showHome());
+  on('btn-quit-battle',  () => { stopBattleLoop(); BGM.stop(); showHome(); });
+  document.querySelectorAll('.mode-tab').forEach(b => {
+    b.addEventListener('click', () => {
+      curMode = b.dataset.mode;
+      renderModeTabs();
+      renderStageGrid();
+    });
+  });
   on('btn-mute', () => {
     MUTED = !MUTED;
     const btn = document.getElementById('btn-mute');
@@ -1372,8 +1340,9 @@ function initEvents() {
   window.addEventListener('resize', resizeBattleCanvas);
 }
 
-function startGame() {
+function startGame(stage = 0) {
   G = {
+    mode:curMode,
     stage:0, heroHp:5, heroMaxHp:5,
     enemyHp:0, enemyMaxHp:0,
     score:0, combo:0, bestCombo:0,
@@ -1383,7 +1352,7 @@ function startGame() {
     locked:false, heroAttackType:'beam',
     questionFlash:0,
   };
-  startStage(0);
+  startStage(stage);
 }
 
 // ─── ヒーロー顔画像URL（透過済みPNGを直接使用） ───
@@ -1397,6 +1366,21 @@ window.addEventListener('DOMContentLoaded', () => {
   initEvents();
   initTitle();
   preloadImages(() => {});
+  // 最初のタップで AudioContext を解放（これが無いとBGM/効果音が再生されない）。
+  // スマホ(特にiOS Safari)は touchend でしか解放されないことがあるため
+  // 複数のイベントで解放を試みる。さらに無音バッファを1つ鳴らして確実にする
+  const unlockAudio = () => {
+    try {
+      // iOS 17+: マナーモード(サイレントスイッチ)でも音を出す
+      if (navigator.audioSession) navigator.audioSession.type = 'playback';
+    } catch (e) {}
+    const ac = getAC();
+    try {
+      const buf = ac.createBuffer(1, 1, 22050);
+      const src = ac.createBufferSource();
+      src.buffer = buf; src.connect(ac.destination); src.start(0);
+    } catch (e) {}
+  };
+  ['pointerdown', 'touchend', 'keydown'].forEach(ev =>
+    document.addEventListener(ev, unlockAudio, { once: true, passive: true }));
 });
-
-var _ = null;

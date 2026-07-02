@@ -1,0 +1,10 @@
+# APIキー（絶対にコミットしない）
+.env
+
+# バックアップ・一時ファイル
+*.bak
+*.tmp
+
+# OS
+Thumbs.db
+.DS_Store
