@@ -864,7 +864,7 @@ function startStage(stage) {
   updateHearts(); updateHpBars(); updateXpBar();
   resizeBattleCanvas();
   setAnimState('idle');
-  BGM.play('battle');
+  BGM.play(isDiffStage(stage) ? 'boss' : 'battle');
   startBattleLoop();
   nextQuestion();
 }
@@ -1305,6 +1305,41 @@ const BGM_SEQS = {
     // ─ Chord accent (sine) ─
     [0,  262,1,0.07,'sine'], [8,  220,1,0.07,'sine'],
     [16, 196,1,0.07,'sine'], [24, 262,1,0.07,'sine'],
+  ]),
+
+  // ボス戦（難易度ステージ用）: Dフリジアン・速めテンポで緊張感を出す
+  boss: _makeBgmSeq(60/162/2, 32, [
+    // ─ Melody (sawtooth) ─
+    [0,  294,2,0.13,'sawtooth'],  // D4
+    [2,  311,1,0.12,'sawtooth'],  // Eb4（半音上がりで不穏に）
+    [3,  294,1,0.11,'sawtooth'],  // D4
+    [4,  262,2,0.12,'sawtooth'],  // C4
+    [6,  294,2,0.13,'sawtooth'],  // D4
+    [8,  349,2,0.13,'sawtooth'],  // F4
+    [10, 311,2,0.12,'sawtooth'],  // Eb4
+    [12, 294,3,0.13,'sawtooth'],  // D4
+    [16, 440,2,0.14,'sawtooth'],  // A4
+    [18, 415,2,0.13,'sawtooth'],  // Ab4（緊張の増4度）
+    [20, 392,2,0.13,'sawtooth'],  // G4
+    [22, 349,2,0.12,'sawtooth'],  // F4
+    [24, 311,2,0.12,'sawtooth'],  // Eb4
+    [26, 349,1,0.11,'sawtooth'],  // F4
+    [27, 311,1,0.11,'sawtooth'],  // Eb4
+    [28, 294,4,0.14,'sawtooth'],  // D4
+    // ─ Bass (sine, 刻み) ─
+    [0,  73,2,0.19,'sine'], [2,  73,2,0.16,'sine'],
+    [4,  73,2,0.19,'sine'], [6,  73,2,0.16,'sine'],
+    [8,  69,2,0.19,'sine'], [10, 69,2,0.16,'sine'],
+    [12, 73,2,0.19,'sine'], [14, 73,2,0.16,'sine'],
+    [16, 58,2,0.19,'sine'], [18, 58,2,0.16,'sine'],
+    [20, 65,2,0.19,'sine'], [22, 65,2,0.16,'sine'],
+    [24, 73,2,0.19,'sine'], [26, 73,2,0.16,'sine'],
+    [28, 73,2,0.19,'sine'], [30, 73,2,0.16,'sine'],
+    // ─ Rhythm stabs (square) ─
+    [0,  147,1,0.09,'square'], [4,  147,1,0.07,'square'],
+    [8,  139,1,0.09,'square'], [12, 147,1,0.07,'square'],
+    [16, 117,1,0.09,'square'], [20, 131,1,0.09,'square'],
+    [24, 147,1,0.07,'square'], [28, 147,1,0.09,'square'],
   ]),
 
   battle: _makeBgmSeq(60/155/2, 24, [
