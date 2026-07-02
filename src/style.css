@@ -337,6 +337,10 @@ h1 {
   border-color: rgba(251,191,36,0.4);
   background: rgba(251,191,36,0.07);
 }
+.stage-thumb {
+  width: 30px; height: 30px;
+  object-fit: contain; display: block;
+}
 .stage-btn--diff .stage-num { color: #fde68a; }
 #home-player-info { font-size: 0.85rem; color: #fde68a; font-weight: 700; }
 .home-footer { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }

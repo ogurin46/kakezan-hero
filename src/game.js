@@ -19,9 +19,12 @@ const HEROES = [
 // ─── キャラクター画像プリロード ───
 const CHAR_IMGS = {};
 function preloadImages(onDone) {
-  const files = Object.fromEntries(
-    Array.from({length:9}, (_,i) => [`enemy_${i+1}`, `img/enemy_${i+1}.png`])
-  );
+  const files = Object.fromEntries([
+    ...Array.from({length:9}, (_,i) => [`enemy_${i+1}`, `img/enemy_${i+1}.png`]),
+    ['enemy_easy',   'img/enemy_easy.png'],
+    ['enemy_normal', 'img/enemy_normal.png'],
+    ['enemy_hard',   'img/enemy_hard.png'],
+  ]);
   let rem = Object.keys(files).length;
   Object.entries(files).forEach(([key, src]) => {
     const img = new Image();
@@ -42,9 +45,15 @@ let curMode = 'kake';
 
 // ─── 数字ミックスの難易度ステージ（ステージ番号 9/10/11） ───
 const DIFFS = [
-  { key:'easy',   label:'かんたん',   maxHp:6,  emoji:'🌱' },
-  { key:'normal', label:'ふつう',     maxHp:9,  emoji:'🌟' },
-  { key:'hard',   label:'むずかしい', maxHp:13, emoji:'🔥' },
+  { key:'easy',   label:'かんたん',   emoji:'🌱' },
+  { key:'normal', label:'ふつう',     emoji:'🌟' },
+  { key:'hard',   label:'むずかしい', emoji:'🔥' },
+];
+// 難易度ステージ専用の敵（img/enemy_easy.png など）
+const DIFF_ENEMIES = [
+  { name:'モコゴン',     img:'enemy_easy',   mult:3, maxHp:6,  color:'#ef4444', emoji:'🔴', atk:'rush',       dmg:1 },
+  { name:'シマシマン',   img:'enemy_normal', mult:6, maxHp:9,  color:'#e2e8f0', emoji:'⚪', atk:'projectile', dmg:2 },
+  { name:'ハサミラー',   img:'enemy_hard',   mult:9, maxHp:13, color:'#94a3b8', emoji:'✂️', atk:'magic',      dmg:3 },
 ];
 const isDiffStage = stage => stage >= 9;
 
@@ -364,8 +373,12 @@ function renderStageGrid() {
     const btn = document.createElement('button');
     btn.className = 'stage-btn stage-btn--diff';
     const medal = SAVE.medals[`${curMode}${i}`] ? '🏅' : '';
+    const de = DIFF_ENEMIES[di];
+    const face = CHAR_IMGS[de.img]
+      ? `<img class="stage-thumb" src="img/${de.img}.png" alt="">`
+      : `<span class="stage-emoji">${d.emoji}</span>`;
     btn.innerHTML = `
-      <span class="stage-emoji">${d.emoji}</span>
+      ${face}
       <span class="stage-num">${d.label}</span>
       <span class="stage-medal">${medal}</span>`;
     btn.addEventListener('click', () => startGame(i));
@@ -399,7 +412,7 @@ function drawEnemy(c, x, y, enemy, flash = 0, shakeX = 0, deadProgress = 0, scal
   if (flash > 0) c.globalAlpha = Math.min(1, (1 - flash) * 2);
   c.scale(scale * deathScale, scale * deathScale);
 
-  const img = CHAR_IMGS[`enemy_${enemy.mult}`];
+  const img = CHAR_IMGS[enemy.img || `enemy_${enemy.mult}`];
   if (img) {
     const h = cv ? cv.height * (0.40 + enemy.mult * 0.018) : 100;
     c.drawImage(img, -h/2, -h, h, h);
@@ -833,10 +846,9 @@ function startStage(stage) {
   G.stage = stage; G.stageWrong = 0;
   let en, label;
   if (isDiffStage(stage)) {
-    // 難易度ステージ: 敵はランダム、HPは難易度で決まる
+    // 難易度ステージ: 専用の敵が登場
     const diff = DIFFS[stage - 9];
-    const base = ENEMIES[Math.floor(Math.random() * ENEMIES.length)];
-    en = { ...base, maxHp: diff.maxHp };
+    en = DIFF_ENEMIES[stage - 9];
     G.diffEnemy = en;
     label = `${diff.emoji} ${diff.label} ${MODES[G.mode]?.gsym || ''}`;
   } else {
