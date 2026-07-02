@@ -170,6 +170,7 @@ let G = {
   locked:false,
   heroAttackType:'beam',
   questionFlash:0,
+  shake:0, impactT:0, impactPow:1, particles:[], dmgPops:[],
 };
 
 let rafId = null, cv, ctx;
@@ -465,74 +466,157 @@ function drawHeroAttackEffect(c) {
 
   switch (G.heroAttackType) {
 
-    // ── beam / punch: 手前(太)→奥(細)のテーパービーム ──
-    case 'beam':
-    case 'punch': {
+    // ── beam: 脈動するテーパービーム＋稲妻＋スピード線 ──
+    case 'beam': {
       const alpha = prog < 0.8 ? 1 : (1-prog)/0.2;
+      const pulse = 1 + 0.18 * Math.sin(G.animT * 0.9); // 太さの脈動
       const steps = 28;
-      c.save(); c.globalAlpha = alpha;
+      c.save();
+      // 発射口のチャージグロー
+      c.globalAlpha = alpha * 0.8;
+      const mg = c.createRadialGradient(cx, startY, 0, cx, startY, 90);
+      mg.addColorStop(0, `rgba(${hexToRgb(hcol)},0.7)`); mg.addColorStop(1, 'transparent');
+      c.fillStyle = mg;
+      c.beginPath(); c.arc(cx, startY, 90, 0, Math.PI*2); c.fill();
       // テーパー形状: 台形セグメントを積み重ねる
       for (let i = 0; i < steps; i++) {
         const t0 = i / steps, t1 = (i+1) / steps;
         if (t1 > prog) break;
         const y0 = perspY(startY, endY, t0);
         const y1 = perspY(startY, endY, t1);
-        const w0 = perspScale(t0) * 44;
-        const w1 = perspScale(t1) * 44;
+        const w0 = perspScale(t0) * 46 * pulse;
+        const w1 = perspScale(t1) * 46 * pulse;
         const a  = 0.5 + 0.5 * (1 - t0);
         c.globalAlpha = alpha * a;
-        c.shadowColor = hcol; c.shadowBlur = 28 * perspScale(t0);
+        c.shadowColor = hcol; c.shadowBlur = 30 * perspScale(t0);
         c.fillStyle = hcol;
         c.beginPath();
         c.moveTo(cx-w0, y0); c.lineTo(cx+w0, y0);
         c.lineTo(cx+w1, y1); c.lineTo(cx-w1, y1);
         c.closePath(); c.fill();
         // 白コア
-        const wc0 = w0 * 0.38, wc1 = w1 * 0.38;
-        c.fillStyle = 'rgba(255,255,255,0.85)'; c.shadowBlur = 0;
+        const wc0 = w0 * 0.4, wc1 = w1 * 0.4;
+        c.fillStyle = 'rgba(255,255,255,0.9)'; c.shadowBlur = 0;
         c.beginPath();
         c.moveTo(cx-wc0, y0); c.lineTo(cx+wc0, y0);
         c.lineTo(cx+wc1, y1); c.lineTo(cx-wc1, y1);
         c.closePath(); c.fill();
+      }
+      // ビームに絡む稲妻
+      c.globalAlpha = alpha * 0.9;
+      c.strokeStyle = '#fff'; c.lineWidth = 2.5;
+      c.shadowColor = hcol; c.shadowBlur = 12;
+      for (let b = 0; b < 2; b++) {
+        c.beginPath();
+        let lt = 0;
+        c.moveTo(cx + (Math.random()*24-12), startY);
+        while (lt < prog) {
+          lt += 0.08 + Math.random() * 0.07;
+          if (lt > prog) break;
+          const w = perspScale(lt) * 52 * pulse;
+          c.lineTo(cx + (Math.random()*2-1) * w, perspY(startY, endY, lt));
+        }
+        c.stroke();
       }
       // 先端グロー（敵位置）
       if (prog > 0.85) {
         const ip = (prog-0.85)/0.15;
         c.globalAlpha = ip * alpha;
         c.fillStyle = '#fff'; c.shadowColor = hcol; c.shadowBlur = 60;
-        c.beginPath(); c.arc(cx, endY, 32 * ip, 0, Math.PI*2); c.fill();
+        c.beginPath(); c.arc(cx, endY, 36 * ip, 0, Math.PI*2); c.fill();
       }
       c.restore();
       break;
     }
 
-    // ── slash: 扇状に広がり奥へ収束 ──
-    case 'slash': {
-      const slashCount = Math.min(3, 1 + Math.floor(G.combo / 2));
-      const alpha = prog < 0.85 ? 1 : (1-prog)/0.15;
-      const sy  = perspY(startY, endY, prog * 0.92);
-      const ps  = perspScale(prog * 0.9);
+    // ── punch: 白熱エネルギー弾が急加速で突っ込む ──
+    case 'punch': {
+      if (prog >= 1) break;
+      const py = perspY(startY, endY, prog);
+      const ps = perspScale(prog);
+      const r  = 32 * ps + 6;
       c.save();
-      for (let s = 0; s < slashCount; s++) {
-        const spread = (s - (slashCount-1)/2) * 50 * ps;
-        c.globalAlpha = alpha * (1 - s * 0.28);
-        c.strokeStyle = s === 0 ? hcol : acol;
-        c.lineWidth   = (16 - s * 3) * ps;
-        c.shadowColor = hcol; c.shadowBlur = 36 * ps;
+      // 集中線（外→中央へ）
+      c.globalAlpha = 0.45; c.strokeStyle = acol; c.lineWidth = 2.5;
+      for (let i = 0; i < 7; i++) {
+        const lx = cx + (i - 3) * cv.width * 0.14 + Math.sin(G.animT + i) * 6;
         c.beginPath();
-        c.ellipse(cx + spread, sy, 80 * ps, 13 * ps, Math.PI/2 + 0.3, 0, Math.PI);
+        c.moveTo(lx, py + 150 * ps + i * 12);
+        c.lineTo(cx + (lx - cx) * 0.25, py + 36 * ps);
         c.stroke();
-        // 残像
-        for (let t = 1; t <= 3; t++) {
-          const tprog = Math.max(0, prog * 0.9 - t * 0.08);
-          const tsy   = perspY(startY, endY, tprog);
-          const tps   = perspScale(tprog * 0.9);
-          c.globalAlpha = alpha * (1 - s*0.28) * (1 - t*0.28);
-          c.lineWidth   = (12 - s*2 - t) * tps;
-          c.beginPath();
-          c.ellipse(cx + spread * (tps/ps), tsy, 72*tps, 11*tps, Math.PI/2+0.3, 0, Math.PI);
-          c.stroke();
-        }
+      }
+      // 残像トレイル
+      for (let i = 1; i <= 5; i++) {
+        const tp = Math.max(0, prog - i * 0.07);
+        const ty = perspY(startY, endY, tp);
+        const ts = perspScale(tp);
+        c.globalAlpha = 0.42 * (1 - i * 0.17);
+        c.fillStyle = hcol;
+        c.beginPath(); c.arc(cx, ty, (32 * ts + 6) * (1 - i * 0.08), 0, Math.PI*2); c.fill();
+      }
+      // 本体（白熱コア）
+      c.globalAlpha = 1;
+      c.fillStyle = hcol; c.shadowColor = hcol; c.shadowBlur = 34;
+      c.beginPath(); c.arc(cx, py, r, 0, Math.PI*2); c.fill();
+      c.fillStyle = '#fff'; c.shadowBlur = 0;
+      c.beginPath(); c.arc(cx, py, r * 0.55, 0, Math.PI*2); c.fill();
+      c.restore();
+      break;
+    }
+
+    // ── slash: 敵の位置で巨大な刃が時間差で交差する ──
+    case 'slash': {
+      const ey  = G.enemyY - cv.height * 0.26;
+      const L   = cv.width * 0.66;
+      const cnt = Math.min(3, 1 + Math.floor(G.combo / 2));
+      // 各斬撃: 角度と開始タイミング（✕字＋横一文字）
+      const defs = [
+        { ang: -0.72, st: 0.08 },
+        { ang:  0.72, st: 0.30 },
+        { ang:  0.04, st: 0.52 },
+      ];
+      c.save();
+      // 突進の予備線（下から敵へ走る光）
+      if (prog < 0.25) {
+        c.globalAlpha = 1 - prog / 0.25;
+        c.strokeStyle = hcol; c.lineWidth = 3; c.shadowColor = hcol; c.shadowBlur = 16;
+        c.beginPath(); c.moveTo(cx, startY); c.lineTo(cx, ey); c.stroke();
+      }
+      for (let i = 0; i < cnt; i++) {
+        const d  = defs[i];
+        const lp = (prog - d.st) / 0.42; // 各斬撃のローカル進行 0→1
+        if (lp <= 0 || lp >= 1) continue;
+        const sweep = Math.min(1, lp * 2.4);          // 刃の伸び
+        const fade  = lp < 0.65 ? 1 : (1 - lp) / 0.35; // 消え際
+        const half  = (L / 2) * sweep;
+        const w     = 20 * (1 - lp * 0.35);
+        c.save();
+        c.translate(cx, ey); c.rotate(d.ang);
+        c.globalAlpha = fade;
+        // 刃本体（両端が尖った三日月形）
+        const grd = c.createLinearGradient(-half, 0, half, 0);
+        grd.addColorStop(0,   `rgba(${hexToRgb(hcol)},0)`);
+        grd.addColorStop(0.5, hcol);
+        grd.addColorStop(1,   `rgba(${hexToRgb(hcol)},0)`);
+        c.fillStyle = grd; c.shadowColor = hcol; c.shadowBlur = 30;
+        c.beginPath();
+        c.moveTo(-half, 0);
+        c.quadraticCurveTo(0, -w, half, 0);
+        c.quadraticCurveTo(0,  w, -half, 0);
+        c.fill();
+        // 白コア
+        c.fillStyle = 'rgba(255,255,255,0.95)'; c.shadowBlur = 0;
+        const wc = w * 0.42, hc2 = half * 0.92;
+        c.beginPath();
+        c.moveTo(-hc2, 0);
+        c.quadraticCurveTo(0, -wc, hc2, 0);
+        c.quadraticCurveTo(0,  wc, -hc2, 0);
+        c.fill();
+        // 先端のきらめき
+        c.globalAlpha = fade;
+        c.fillStyle = '#fff'; c.shadowColor = '#fff'; c.shadowBlur = 16;
+        c.beginPath(); c.arc(half * (lp < 0.5 ? sweep : 1), 0, 5, 0, Math.PI*2); c.fill();
+        c.restore();
       }
       c.restore();
       break;
@@ -569,6 +653,7 @@ function drawHeroAttackEffect(c) {
     // ── ultra: 奥に向かって巨大な光波が収束 ──
     case 'ultra': {
       const phase = prog < 0.3 ? prog/0.3 : prog < 0.7 ? 1 : (1-prog)/0.3;
+      if (prog > 0.25 && prog < 0.85) G.shake = Math.max(G.shake, 3);
       c.save();
       // 画面フラッシュ
       c.fillStyle = `rgba(${hexToRgb(hcol)},${phase * 0.38})`; c.fillRect(0, 0, cv.width, cv.height);
@@ -603,6 +688,7 @@ function drawHeroAttackEffect(c) {
     // ── ultra_max: 全画面光爆発＋奥行きリング ──
     case 'ultra_max': {
       const phase = prog < 0.2 ? prog/0.2 : prog < 0.75 ? 1 : (1-prog)/0.25;
+      if (prog > 0.15 && prog < 0.9) G.shake = Math.max(G.shake, 6);
       c.save();
       c.fillStyle = `rgba(255,255,255,${phase*0.55})`; c.fillRect(0, 0, cv.width, cv.height);
       c.fillStyle = `rgba(${hexToRgb(hcol)},${phase*0.45})`; c.fillRect(0, 0, cv.width, cv.height);
@@ -698,6 +784,101 @@ function drawEnemyAttackEffect(c) {
   }
 }
 
+// ─── ヒットエフェクト（シェイク・パーティクル・ダメージ表示） ───
+function addShake(frames) { G.shake = Math.max(G.shake, frames); }
+
+function spawnParticles(x, y, colors, n = 16, spd = 6) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const v = spd * (0.4 + Math.random() * 0.9);
+    G.particles.push({
+      x, y,
+      vx: Math.cos(a) * v, vy: Math.sin(a) * v - 1.5,
+      life: 18 + Math.random() * 14, max: 30,
+      r: 2.5 + Math.random() * 3.5,
+      color: colors[i % colors.length],
+    });
+  }
+}
+
+function addDmgPop(x, y, text) {
+  G.dmgPops.push({ x, y, text, t: 0 });
+}
+
+// 攻撃ヒット時の演出をまとめて発火
+function triggerImpact(dmg) {
+  const hcol = HEROES[SAVE.heroId || 0].col;
+  G.impactT = 16; G.impactPow = dmg;
+  addShake(8 + dmg * 3);
+  const iy = G.enemyY - cv.height * 0.25;
+  spawnParticles(G.enemyX, iy, [hcol, '#ffffff', '#fde68a'], 12 + dmg * 6, 5 + dmg * 1.5);
+  addDmgPop(G.enemyX, iy - 20, `-${dmg}`);
+}
+
+// ヒットスパーク（白フラッシュ＋放射スパイク＋衝撃波リング）
+function drawImpact(c) {
+  if (G.impactT <= 0) return;
+  const t = 1 - G.impactT / 16; // 0→1
+  const x = G.enemyX, y = G.enemyY - cv.height * 0.25;
+  const pow = G.impactPow;
+  const hcol = HEROES[SAVE.heroId || 0].col;
+  c.save();
+  // 白フラッシュ
+  c.globalAlpha = 1 - t;
+  c.fillStyle = '#fff'; c.shadowColor = '#fff'; c.shadowBlur = 34;
+  c.beginPath(); c.arc(x, y, 10 + t * 18 * pow, 0, Math.PI * 2); c.fill();
+  // 放射スパイク
+  c.strokeStyle = '#fff'; c.lineWidth = 3.5 * (1 - t); c.shadowBlur = 14;
+  for (let i = 0; i < 10; i++) {
+    const a  = (i / 10) * Math.PI * 2 + (i % 2) * 0.35;
+    const r0 = 16 + t * 44 * pow;
+    const r1 = r0 + (22 + (i % 3) * 10) * (1 - t);
+    c.beginPath();
+    c.moveTo(x + Math.cos(a) * r0, y + Math.sin(a) * r0);
+    c.lineTo(x + Math.cos(a) * r1, y + Math.sin(a) * r1);
+    c.stroke();
+  }
+  // 衝撃波リング
+  c.globalAlpha = (1 - t) * 0.85;
+  c.strokeStyle = hcol; c.lineWidth = 4 * (1 - t) + 1; c.shadowColor = hcol; c.shadowBlur = 20;
+  c.beginPath(); c.arc(x, y, 8 + t * 90 * pow, 0, Math.PI * 2); c.stroke();
+  c.restore();
+}
+
+function updateAndDrawParticles(c) {
+  for (let i = G.particles.length - 1; i >= 0; i--) {
+    const p = G.particles[i];
+    p.x += p.vx; p.y += p.vy; p.vy += 0.18; p.life--;
+    if (p.life <= 0) { G.particles.splice(i, 1); continue; }
+    c.save();
+    c.globalAlpha = Math.min(1, p.life / 12);
+    c.fillStyle = p.color; c.shadowColor = p.color; c.shadowBlur = 8;
+    c.beginPath(); c.arc(p.x, p.y, p.r * Math.min(1, p.life / p.max + 0.4), 0, Math.PI * 2); c.fill();
+    c.restore();
+  }
+}
+
+function updateAndDrawDmgPops(c) {
+  for (let i = G.dmgPops.length - 1; i >= 0; i--) {
+    const d = G.dmgPops[i];
+    d.t++;
+    if (d.t > 42) { G.dmgPops.splice(i, 1); continue; }
+    const scale = d.t < 6 ? 0.6 + d.t * 0.14 : (d.t < 10 ? 1.44 - (d.t - 6) * 0.11 : 1);
+    const alpha = d.t < 8 ? 1 : Math.max(0, (42 - d.t) / 30);
+    c.save();
+    c.translate(d.x, d.y - d.t * 1.4);
+    c.scale(scale, scale);
+    c.globalAlpha = alpha;
+    c.font = '900 34px "Hiragino Maru Gothic Pro","M PLUS Rounded 1c",sans-serif';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.lineWidth = 6; c.strokeStyle = 'rgba(0,0,0,0.85)';
+    c.strokeText(d.text, 0, 0);
+    c.fillStyle = '#fde68a'; c.shadowColor = '#f59e0b'; c.shadowBlur = 12;
+    c.fillText(d.text, 0, 0);
+    c.restore();
+  }
+}
+
 // ─── バトルCanvas リサイズ ───
 function resizeBattleCanvas() {
   const bf = $('battle-field');
@@ -714,6 +895,13 @@ function resizeBattleCanvas() {
 function drawBattle() {
   if (!cv || !ctx) return;
   ctx.clearRect(0, 0, cv.width, cv.height);
+
+  // 画面シェイク（攻撃ヒット時）
+  ctx.save();
+  if (G.shake > 0) {
+    const s = Math.min(10, G.shake);
+    ctx.translate((Math.random() * 2 - 1) * s, (Math.random() * 2 - 1) * s * 0.6);
+  }
 
   const t   = G.animT;
   const dur = getAnimDur(G.animState);
@@ -760,6 +948,11 @@ function drawBattle() {
 
   if (G.animState === 'heroAttack')  drawHeroAttackEffect(ctx);
   if (G.animState === 'enemyAttack') drawEnemyAttackEffect(ctx);
+
+  drawImpact(ctx);
+  updateAndDrawParticles(ctx);
+  updateAndDrawDmgPops(ctx);
+  ctx.restore();
 }
 
 // ─── アニメーションループ ───
@@ -772,6 +965,8 @@ function startBattleLoop() {
     rafId = requestAnimationFrame(loop);
     G.animT++;
     if (G.questionFlash > 0) G.questionFlash--;
+    if (G.shake > 0)   G.shake--;
+    if (G.impactT > 0) G.impactT--;
     const dur = getAnimDur(G.animState);
     if (G.animState !== 'idle' && G.animState !== 'heroWin' && G.animT > dur) onAnimEnd();
     drawBattle();
@@ -801,13 +996,16 @@ function showHeroCutin() {
 // ─── アニメーション終了 ───
 function onAnimEnd() {
   switch (G.animState) {
-    case 'heroAttack':
+    case 'heroAttack': {
       $('attack-beam').classList.add('hidden');
-      G.enemyHp = Math.max(0, G.enemyHp - (ATK_DMG[G.heroAttackType] || 1));
+      const atkDmg = ATK_DMG[G.heroAttackType] || 1;
+      G.enemyHp = Math.max(0, G.enemyHp - atkDmg);
+      triggerImpact(atkDmg);
       updateHpBars();
       if (G.enemyHp <= 0) { showHeroCutin(); setAnimState('enemyDead'); }
       else                 setAnimState('enemyHit');
       break;
+    }
     case 'enemyHit':
       setAnimState('idle');
       nextQuestion();
@@ -821,6 +1019,7 @@ function onAnimEnd() {
     case 'enemyAttack': {
       const dmg = currentEnemy()?.dmg ?? 1;
       G.heroHp = Math.max(0, G.heroHp - dmg);
+      addShake(7 + dmg * 2);
       updateHearts();
       updateHpBars(); // ← HPバーも即座に更新（バグ修正）
       SFX.damage();
@@ -1475,6 +1674,7 @@ function startGame(stage = 0) {
     heroX:0, heroY:0, enemyX:0, enemyY:0,
     locked:false, heroAttackType:'beam',
     questionFlash:0,
+    shake:0, impactT:0, impactPow:1, particles:[], dmgPops:[],
   };
   startStage(stage);
 }
