@@ -33,12 +33,27 @@ function preloadImages(onDone) {
 
 // ─── けいさんモード ───
 const MODES = {
-  kake:  { tab:'✖️ かけざん', sym: n => `×${n}` },
-  tashi: { tab:'➕ たしざん', sym: n => `＋${n}` },
-  hiki:  { tab:'➖ ひきざん', sym: n => `−${n}` },
-  mix:   { tab:'🎲 ミックス', sym: () => 'MIX' },
+  kake:  { tab:'✖️ かけざん', sym: n => `×${n}`, gsym:'×'   },
+  tashi: { tab:'➕ たしざん', sym: n => `＋${n}`, gsym:'＋'  },
+  hiki:  { tab:'➖ ひきざん', sym: n => `−${n}`, gsym:'−'   },
+  mix:   { tab:'🎲 ミックス', sym: () => 'MIX',  gsym:'MIX' },
 };
 let curMode = 'kake';
+
+// ─── 数字ミックスの難易度ステージ（ステージ番号 9/10/11） ───
+const DIFFS = [
+  { key:'easy',   label:'かんたん',   maxHp:6,  emoji:'🌱' },
+  { key:'normal', label:'ふつう',     maxHp:9,  emoji:'🌟' },
+  { key:'hard',   label:'むずかしい', maxHp:13, emoji:'🔥' },
+];
+const isDiffStage = stage => stage >= 9;
+
+function randInt(lo, hi) { return lo + Math.floor(Math.random() * (hi - lo + 1)); }
+
+// 現在のステージの敵（難易度ステージはランダムに選ばれた敵）
+function currentEnemy() {
+  return isDiffStage(G.stage) ? G.diffEnemy : ENEMIES[G.stage];
+}
 
 // ─── XP / レベル ───
 const XP_TABLE   = [0, 100, 250, 500, 900, 1400, 2000, 2700, 3500, 4400];
@@ -155,7 +170,7 @@ function getAnimDur(state) {
   const hd = { beam:22, punch:24, slash:30, bomb:32, ultra:40, ultra_max:55 };
   const ed = { rush:22, projectile:28, magic:32 };
   if (state === 'heroAttack')  return hd[G.heroAttackType] || 22;
-  if (state === 'enemyAttack') return ed[ENEMIES[G.stage]?.atk || 'rush'] || 22;
+  if (state === 'enemyAttack') return ed[currentEnemy()?.atk || 'rush'] || 22;
   if (state === 'enemyHit')  return 20;
   if (state === 'heroHit')   return 18;
   if (state === 'enemyDead') return 42;
@@ -339,6 +354,19 @@ function renderStageGrid() {
     btn.innerHTML = `
       <span class="stage-emoji">${en.emoji}</span>
       <span class="stage-num">ST.${i+1} ${MODES[curMode].sym(en.mult)}</span>
+      <span class="stage-medal">${medal}</span>`;
+    btn.addEventListener('click', () => startGame(i));
+    grid.appendChild(btn);
+  });
+  // 数字ミックスの難易度ステージ（かんたん／ふつう／むずかしい）
+  DIFFS.forEach((d, di) => {
+    const i = 9 + di;
+    const btn = document.createElement('button');
+    btn.className = 'stage-btn stage-btn--diff';
+    const medal = SAVE.medals[`${curMode}${i}`] ? '🏅' : '';
+    btn.innerHTML = `
+      <span class="stage-emoji">${d.emoji}</span>
+      <span class="stage-num">${d.label}</span>
       <span class="stage-medal">${medal}</span>`;
     btn.addEventListener('click', () => startGame(i));
     grid.appendChild(btn);
@@ -602,7 +630,7 @@ function hexToRgb(hex) {
 
 // ─── 敵攻撃エフェクト（縦方向: 上→下） ───
 function drawEnemyAttackEffect(c) {
-  const enemy  = ENEMIES[G.stage];
+  const enemy  = currentEnemy();
   const dur    = getAnimDur('enemyAttack');
   const prog   = Math.min(1, G.animT / dur);
   const cx     = cv.width / 2;
@@ -676,7 +704,7 @@ function drawBattle() {
 
   const t   = G.animT;
   const dur = getAnimDur(G.animState);
-  const en  = ENEMIES[G.stage];
+  const en  = currentEnemy();
 
   // スポットライト（舞台演出）
   const sl = ctx.createRadialGradient(G.enemyX, G.enemyY * 0.7, 0, G.enemyX, G.enemyY * 0.7, cv.width * 0.75);
@@ -778,7 +806,7 @@ function onAnimEnd() {
       setTimeout(() => showStageClear(), 600);
       break;
     case 'enemyAttack': {
-      const dmg = ENEMIES[G.stage]?.dmg ?? 1;
+      const dmg = currentEnemy()?.dmg ?? 1;
       G.heroHp = Math.max(0, G.heroHp - dmg);
       updateHearts();
       updateHpBars(); // ← HPバーも即座に更新（バグ修正）
@@ -803,12 +831,23 @@ function onAnimEnd() {
 // ─── ゲーム進行 ───
 function startStage(stage) {
   G.stage = stage; G.stageWrong = 0;
-  const en = ENEMIES[stage];
+  let en, label;
+  if (isDiffStage(stage)) {
+    // 難易度ステージ: 敵はランダム、HPは難易度で決まる
+    const diff = DIFFS[stage - 9];
+    const base = ENEMIES[Math.floor(Math.random() * ENEMIES.length)];
+    en = { ...base, maxHp: diff.maxHp };
+    G.diffEnemy = en;
+    label = `${diff.emoji} ${diff.label} ${MODES[G.mode]?.gsym || ''}`;
+  } else {
+    en = ENEMIES[stage];
+    label = `ST.${stage+1}/9 ${MODES[G.mode] ? MODES[G.mode].sym(en.mult) : ''}`;
+  }
   G.enemyHp = en.maxHp; G.enemyMaxHp = en.maxHp;
   G.combo = 0; G.locked = false;
 
   showScreen('screen-battle');
-  $('stage-label').textContent = `ST.${stage+1}/9 ${MODES[G.mode] ? MODES[G.mode].sym(en.mult) : ''}`;
+  $('stage-label').textContent = label;
   $('enemy-hp-name').textContent = en.name;
   updateHearts(); updateHpBars(); updateXpBar();
   resizeBattleCanvas();
@@ -829,6 +868,36 @@ function makeQuestion(mode, n) {
   if (kind === 'kake')  return { kind, n, a, correct: n*a, text: `${n} × ${a} = ?` };
   if (kind === 'tashi') return { kind, n, a, correct: n+a, text: `${n} + ${a} = ?` };
   return { kind, n, a, correct: a, text: `${n+a} − ${n} = ?` }; // ひきざん
+}
+
+// 数字ミックスの難易度ステージ用の問題
+let _lastText = '';
+function makeDiffQuestion(mode, diff) {
+  let q, guard = 0;
+  do { q = _genDiffQuestion(mode, diff); } while (q.text === _lastText && guard++ < 8);
+  _lastText = q.text;
+  return q;
+}
+function _genDiffQuestion(mode, diff) {
+  const kind = mode === 'mix' ? ['kake','tashi','hiki'][Math.floor(Math.random()*3)] : mode;
+  let a, b;
+  if (kind === 'kake') {
+    if      (diff === 'easy')   { a = randInt(1,5); b = randInt(1,5); } // 小さい九九
+    else if (diff === 'normal') { a = randInt(1,9); b = randInt(1,9); } // 九九ぜんぶ
+    else                        { a = randInt(6,9); b = randInt(6,9); } // むずかしい段
+    return { kind, n:a, a:b, correct:a*b, text:`${a} × ${b} = ?` };
+  }
+  if (kind === 'tashi') {
+    if      (diff === 'easy')   { a = randInt(1,8); b = randInt(1, Math.min(9, 10-a)); } // 和が10以下
+    else if (diff === 'normal') { a = randInt(2,9); b = randInt(2,9); }                  // くり上がりあり
+    else                        { a = randInt(11,89); b = randInt(3,9); }                // 2けた＋1けた
+    return { kind, n:a, a:b, correct:a+b, text:`${a} + ${b} = ?` };
+  }
+  // ひきざん
+  if      (diff === 'easy')   { a = randInt(3,10); b = randInt(1, a-1); }          // 10までのひきざん
+  else if (diff === 'normal') { b = randInt(2,9); a = b + randInt(2,9); }          // くり下がりあり
+  else                        { a = randInt(21,99); b = randInt(3,9); }            // 2けた−1けた
+  return { kind, n:b, a, correct:a-b, text:`${a} − ${b} = ?` };
 }
 
 function makeWrongChoices(q) {
@@ -853,8 +922,9 @@ function makeWrongChoices(q) {
 function nextQuestion() {
   G.locked = false;
   G.questionFlash = 18; // 敵が問題を「撃ってくる」Canvas演出
-  const en = ENEMIES[G.stage];
-  G.question = makeQuestion(G.mode, en.mult);
+  G.question = isDiffStage(G.stage)
+    ? makeDiffQuestion(G.mode, DIFFS[G.stage - 9].key)
+    : makeQuestion(G.mode, currentEnemy().mult);
   $('question-text').textContent = G.question.text;
   // 問題ボックスの登場アニメーション
   const qbox = $('question-box');
@@ -912,11 +982,11 @@ function onAnswer(val, btn) {
     });
     G.combo = 0; G.totalWrong++; G.stageWrong++;
     const atkNames = { rush:'つっこんできた！', projectile:'飛び道具！', magic:'魔法攻撃！' };
-    showAtkLabel(atkNames[ENEMIES[G.stage].atk] || '攻撃！');
+    showAtkLabel(atkNames[currentEnemy().atk] || '攻撃！');
     setAnimState('enemyAttack');
 
     SFX.wrong();
-    setTimeout(() => SFX.enemyAttack(ENEMIES[G.stage].atk), 140);
+    setTimeout(() => SFX.enemyAttack(currentEnemy().atk), 140);
 
     showMsg(`❌ ざんねん…\n${G.question.text.replace('?', G.question.correct)}`, '#ef4444');
   }
@@ -976,9 +1046,9 @@ function showStageClear() {
   if (G.heroHp < G.heroMaxHp) { G.heroHp++; healed = true; }
 
   showScreen('screen-stage-clear');
-  const en = ENEMIES[G.stage];
+  const en = currentEnemy();
   $('clear-detail').textContent = `${en.name} をたおした！${healed ? '　❤️+1 かいふく！' : ''}`;
-  $('clear-icon').textContent = ['🎉','✨','🌟','💪','🔥','⚡','🏆','🎊','👑'][G.stage] || '🎉';
+  $('clear-icon').textContent = ['🎉','✨','🌟','💪','🔥','⚡','🏆','🎊','👑','🌱','🌟','🔥'][G.stage] || '🎉';
 
   const mr = $('medal-result');
   if (mr) {
@@ -990,7 +1060,10 @@ function showStageClear() {
   const xpEl = $('xp-gained');
   if (xpEl) xpEl.textContent = `LV.${getLevel(SAVE.totalXp)}  総XP: ${SAVE.totalXp}`;
 
-  $('btn-next-stage').textContent = G.stage >= 8 ? 'ラストクリア！ 🏆' : `ステージ ${G.stage+2} へ ▶`;
+  $('btn-next-stage').textContent =
+    (G.stage === 8 || G.stage >= 11) ? 'ラストクリア！ 🏆'
+    : isDiffStage(G.stage)           ? `つぎは ${DIFFS[G.stage - 8].label} ▶`
+    :                                  `ステージ ${G.stage+2} へ ▶`;
 }
 
 // ─── ゲームオーバー ───
@@ -998,7 +1071,7 @@ function showGameOver() {
   BGM.stop();
   setTimeout(() => SFX.gameOver(), 100);
   stopBattleLoop(); showScreen('screen-gameover');
-  $('go-detail').textContent = `${ENEMIES[G.stage].name} に やられてしまった…\nスコア: ${G.score}`;
+  $('go-detail').textContent = `${currentEnemy().name} に やられてしまった…\nスコア: ${G.score}`;
 }
 
 // ─── ビクトリー ───
@@ -1008,7 +1081,8 @@ function showVictory() {
   stopBattleLoop(); showScreen('screen-victory');
   $('final-score').textContent = `スコア: ${G.score}点  さいこうコンボ: ${G.bestCombo}\nLV.${getLevel(SAVE.totalXp)}  総XP: ${SAVE.totalXp}`;
   const vic = $('vic-medals');
-  if (vic) vic.innerHTML = ENEMIES.map((_,i) => `<span>${SAVE.medals[`${G.mode}${i}`] ? '🏅' : '☆'}</span>`).join('');
+  if (vic) vic.innerHTML = Array.from({length: 12}, (_, i) =>
+    `<span>${SAVE.medals[`${G.mode}${i}`] ? '🏅' : '☆'}</span>`).join('');
   spawnConfetti();
 }
 
@@ -1314,7 +1388,10 @@ function on(id, fn) {
 function initEvents() {
   on('btn-name-confirm', () => confirmName());
   on('btn-hero-confirm', () => confirmHeroSelect());
-  on('btn-next-stage',   () => { if (G.stage >= 8) showVictory(); else startStage(G.stage+1); });
+  on('btn-next-stage',   () => {
+    if (G.stage === 8 || G.stage >= 11) showVictory();
+    else startStage(G.stage+1);
+  });
   on('btn-retry',        () => { G.heroHp = 5; G.heroMaxHp = 5; startStage(G.stage); });
   on('btn-clear-home',   () => showHome());
   on('btn-go-home',      () => showHome());

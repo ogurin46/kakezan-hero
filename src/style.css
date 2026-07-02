@@ -333,6 +333,11 @@ h1 {
 .stage-emoji { font-size: 1.55rem; line-height: 1.2; }
 .stage-num { font-size: 0.7rem; font-weight: 900; color: #94a3b8; }
 .stage-medal { font-size: 0.85rem; min-height: 1.2em; line-height: 1.2; }
+.stage-btn--diff {
+  border-color: rgba(251,191,36,0.4);
+  background: rgba(251,191,36,0.07);
+}
+.stage-btn--diff .stage-num { color: #fde68a; }
 #home-player-info { font-size: 0.85rem; color: #fde68a; font-weight: 700; }
 .home-footer { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 
