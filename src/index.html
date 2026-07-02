@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>かけざんヒーロー</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- タイトル -->
+  <section id="screen-title" class="screen">
+    <div class="title-bg-stars" id="title-stars"></div>
+    <div class="title-top-area">
+      <p class="title-sub-top">⚡ もんすたーをたおせ！</p>
+      <h1>かけざん<br>ヒーロー</h1>
+      <p class="title-sub-btm">１けた×１けたのかけざん</p>
+    </div>
+    <p class="tap-to-start">タップでスタート！</p>
+    <div class="title-bottom-area">
+      <img id="title-hero-img-main" src="img/hero全体_transparent.png" class="title-hero-zenbody" alt="ヒーローたち">
+    </div>
+  </section>
+
+  <!-- セーブ選択 -->
+  <section id="screen-save-select" class="screen hidden">
+    <div class="title-bg-stars" id="save-stars"></div>
+    <div class="save-select-inner">
+      <h2 class="save-screen-title">セーブデータを えらんでね！</h2>
+      <div id="save-slots"></div>
+      <button class="save-back-btn" onclick="initTitle()">◀ もどる</button>
+    </div>
+  </section>
+
+  <!-- 名前入力 -->
+  <section id="screen-name-input" class="screen hidden">
+    <div class="title-bg-stars" id="name-stars"></div>
+    <div class="name-input-inner">
+      <p class="name-input-title">なまえを いれてね！</p>
+      <input type="text" id="player-name-input" maxlength="8" placeholder="なまえ（8文字まで）" autocomplete="off">
+      <button id="btn-name-confirm" class="big-btn pulse-btn">けってい ▶</button>
+      <button class="save-back-btn" onclick="showSaveSelect()">◀ もどる</button>
+    </div>
+  </section>
+
+  <!-- ヒーロー選択 -->
+  <section id="screen-hero-select" class="screen hidden">
+    <div class="title-bg-stars" id="hero-sel-stars"></div>
+    <div class="hero-select-inner">
+      <p class="hero-select-header">ヒーローを えらんでね！</p>
+      <div id="hero-select-image-wrap">
+        <img id="hero-select-img" src="img/hero選択_transparent.png" alt="ヒーロー選択">
+        <div id="hero-select-overlay"></div>
+      </div>
+      <p id="hero-select-name"></p>
+      <div class="hero-select-footer">
+        <button id="btn-hero-confirm" class="big-btn pulse-btn">このヒーローでスタート！ ▶</button>
+        <button class="save-back-btn" onclick="showSaveSelect()">◀ もどる</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- バトル -->
+  <section id="screen-battle" class="screen hidden">
+    <div id="stage-bar">
+      <span id="stage-label"></span>
+      <div id="xp-section">
+        <span id="lv-label">LV.1</span>
+        <div id="xp-bar-wrap"><div id="xp-bar"></div></div>
+      </div>
+      <div id="hero-hearts"></div>
+      <button id="btn-mute" class="mute-btn" title="音のオン/オフ">🔊</button>
+    </div>
+
+    <div id="battle-field">
+      <canvas id="battle-canvas"></canvas>
+      <div id="battle-overlay">
+        <div id="attack-beam" class="hidden"></div>
+        <div id="hit-flash" class="hidden"></div>
+      </div>
+      <div id="atk-label" class="hidden"></div>
+    </div>
+
+    <div id="battle-hp-row">
+      <span class="hp-name" id="enemy-hp-name"></span>
+      <div class="hp-bar-wrap"><div id="enemy-hp-bar" class="hp-bar enemy-bar"></div></div>
+      <div id="hero-hp-bar" class="hidden"></div>
+    </div>
+
+    <div id="question-area">
+      <div id="question-box">
+        <div id="question-label">⚡ もんだい！</div>
+        <span id="question-text"></span>
+      </div>
+      <div id="choices"></div>
+    </div>
+
+    <div id="battle-msg" class="hidden"></div>
+  </section>
+
+  <!-- ステージクリア -->
+  <section id="screen-stage-clear" class="screen hidden">
+    <div class="result-content">
+      <p class="result-icon" id="clear-icon">🎉</p>
+      <p class="result-title">やっつけた！</p>
+      <p class="result-detail" id="clear-detail"></p>
+      <div id="medal-row">
+        <span class="mstar" id="mstar-0">☆</span>
+        <span class="mstar" id="mstar-1">☆</span>
+        <span class="mstar" id="mstar-2">☆</span>
+      </div>
+      <div id="score-display"></div>
+      <div id="xp-gained"></div>
+      <button id="btn-next-stage" class="big-btn">つぎのステージへ ▶</button>
+    </div>
+  </section>
+
+  <!-- ゲームオーバー -->
+  <section id="screen-gameover" class="screen hidden">
+    <div class="result-content">
+      <p class="result-icon">💥</p>
+      <p class="result-title go-title">やられた…</p>
+      <p class="result-detail" id="go-detail"></p>
+      <button id="btn-retry" class="big-btn">もういちど ▶</button>
+      <button id="btn-go-title" class="sub-btn">タイトルへ 🏠</button>
+    </div>
+  </section>
+
+  <!-- ビクトリー -->
+  <section id="screen-victory" class="screen hidden">
+    <div class="result-content">
+      <div id="victory-confetti"></div>
+      <p class="result-icon">🏆</p>
+      <p class="result-title vic-title">ぜんぶクリア！！</p>
+      <p class="result-detail">かけざんはかんぺき！<br>きみはほんとうの<br>かけざんヒーローだ！</p>
+      <div id="vic-medals"></div>
+      <div id="final-score"></div>
+      <button id="btn-vic-title" class="big-btn">タイトルへ 🏠</button>
+    </div>
+  </section>
+
+</div>
+<script src="game.js"></script>
+</body>
+</html>
