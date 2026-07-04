@@ -21,6 +21,7 @@ const CHAR_IMGS = {};
 function preloadImages(onDone) {
   const files = Object.fromEntries([
     ...Array.from({length:9}, (_,i) => [`enemy_${i+1}`, `img/enemy_${i+1}.png`]),
+    ...Array.from({length:6}, (_,i) => [`minion_${i+1}`, `img/minion_${i+1}.png`]),
     ['enemy_easy',   'img/enemy_easy.png'],
     ['enemy_normal', 'img/enemy_normal.png'],
     ['enemy_hard',   'img/enemy_hard.png'],
@@ -59,9 +60,67 @@ const isDiffStage = stage => stage >= 9;
 
 function randInt(lo, hi) { return lo + Math.floor(Math.random() * (hi - lo + 1)); }
 
-// 現在のステージの敵（難易度ステージはランダムに選ばれた敵）
+// ─── ザコモンスター（各ステージにランダムで2体登場） ───
+const MINIONS = [
+  { name:'プルプルン', img:'minion_1', mult:2, color:'#a78bfa', emoji:'👻', atk:'projectile', dmg:1 },
+  { name:'サボテンダ', img:'minion_2', mult:3, color:'#4ade80', emoji:'🌵', atk:'rush',       dmg:1 },
+  { name:'ビリビリン', img:'minion_3', mult:4, color:'#facc15', emoji:'⚡', atk:'magic',      dmg:1 },
+  { name:'シズクン',   img:'minion_4', mult:3, color:'#38bdf8', emoji:'💧', atk:'projectile', dmg:1 },
+  { name:'ニャゴラス', img:'minion_5', mult:4, color:'#f472b6', emoji:'🐱', atk:'rush',       dmg:1 },
+  { name:'コンタロー', img:'minion_6', mult:5, color:'#fb923c', emoji:'🦊', atk:'magic',      dmg:1 },
+];
+
+// ─── モンスター登場セリフ ───
+const ENTRY_LINES = [
+  'ほんとうに できているか かくにんするぞ！',
+  'この もんだい できるかな？',
+  'おれに かてるかな〜？',
+  'けいさん しょうぶだ！',
+  'まちがえたら こうげき しちゃうぞ！',
+  'ちからだめしだ！ いくぞ！',
+  'ぜんぶ こたえられるかな？',
+  'ふっふっふ… やってみろ！',
+];
+const BOSS_LINES = [
+  'おれさまが ボスだ！ かくごしろ！',
+  'ここからが ほんばんだぞ！',
+  'さいごの あいてだ！ かかってこい！',
+];
+
+// 日本語音声でしゃべる（Web Speech API）
+function speak(text, pitch = 1, rate = 1.05) {
+  if (MUTED || !window.speechSynthesis) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'ja-JP'; u.pitch = pitch; u.rate = rate; u.volume = 0.9;
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+// 現在のステージの敵（ウェーブ内の現在のモンスター）
 function currentEnemy() {
-  return isDiffStage(G.stage) ? G.diffEnemy : ENEMIES[G.stage];
+  return (G.wave && G.wave[G.waveIdx]) || ENEMIES[Math.min(G.stage, 8)];
+}
+
+// ステージのウェーブ（ザコ2体＋ボス）を組み立てる
+function buildWave(stage) {
+  const i1 = Math.floor(Math.random() * MINIONS.length);
+  let i2;
+  do { i2 = Math.floor(Math.random() * MINIONS.length); } while (i2 === i1);
+  if (isDiffStage(stage)) {
+    const hpBase = { easy:8, normal:10, hard:12 }[DIFFS[stage - 9].key];
+    return [
+      { ...MINIONS[i1],             maxHp: hpBase },
+      { ...MINIONS[i2],             maxHp: hpBase + 1 },
+      { ...DIFF_ENEMIES[stage - 9], maxHp: hpBase + 3 },
+    ];
+  }
+  return [
+    { ...MINIONS[i1],    maxHp: 8  + Math.floor(stage / 3) },
+    { ...MINIONS[i2],    maxHp: 9  + Math.floor(stage / 3) },
+    { ...ENEMIES[stage], maxHp: 10 + Math.floor(stage / 2) },
+  ];
 }
 
 // ─── XP / レベル ───
@@ -171,6 +230,7 @@ let G = {
   heroAttackType:'beam',
   questionFlash:0,
   shake:0, impactT:0, impactPow:1, particles:[], dmgPops:[],
+  wave:null, waveIdx:0,
 };
 
 let rafId = null, cv, ctx;
@@ -181,9 +241,10 @@ function getAnimDur(state) {
   const ed = { rush:22, projectile:28, magic:32 };
   if (state === 'heroAttack')  return hd[G.heroAttackType] || 22;
   if (state === 'enemyAttack') return ed[currentEnemy()?.atk || 'rush'] || 22;
-  if (state === 'enemyHit')  return 20;
-  if (state === 'heroHit')   return 18;
-  if (state === 'enemyDead') return 42;
+  if (state === 'enemyHit')   return 20;
+  if (state === 'heroHit')    return 18;
+  if (state === 'enemyDead')  return 42;
+  if (state === 'enemyEnter') return 55; // 登場演出（セリフを読む時間）
   return 999;
 }
 
@@ -934,16 +995,21 @@ function drawBattle() {
   }
 
   // 敵 (縦移動・揺れ)
-  let enemyShakeX = 0, enemyFlash = 0, deadProg = 0, enemyOffY = 0;
+  let enemyShakeX = 0, enemyFlash = 0, deadProg = 0, enemyOffY = 0, enterScale = 1;
   if (G.animState === 'enemyHit') { enemyFlash = 1 - t/dur; enemyShakeX = Math.sin(t*Math.PI*3)*12; }
   if (G.animState === 'enemyAttack' && en.atk === 'rush') {
     enemyOffY = Math.sin((t/dur)*Math.PI) * cv.height * 0.20;
   }
   if (G.animState === 'enemyDead') deadProg = Math.min(1, t/40);
+  if (G.animState === 'enemyEnter') {
+    // ポン！と弾んで登場（最初の20フレームで拡大→バウンス）
+    const p = Math.min(1, t / 20);
+    enterScale = p < 0.7 ? (p / 0.7) * 1.15 : 1.15 - ((p - 0.7) / 0.3) * 0.15;
+  }
 
   // 敵描画（正面・中央・大きめ）
   if (G.enemyHp > 0 || G.animState === 'enemyDead') {
-    drawEnemy(ctx, G.enemyX, G.enemyY + enemyOffY, en, enemyFlash, enemyShakeX, deadProg, 1.7);
+    drawEnemy(ctx, G.enemyX, G.enemyY + enemyOffY, en, enemyFlash, enemyShakeX, deadProg, 1.7 * enterScale);
   }
 
   if (G.animState === 'heroAttack')  drawHeroAttackEffect(ctx);
@@ -1002,8 +1068,12 @@ function onAnimEnd() {
       G.enemyHp = Math.max(0, G.enemyHp - atkDmg);
       triggerImpact(atkDmg);
       updateHpBars();
-      if (G.enemyHp <= 0) { showHeroCutin(); setAnimState('enemyDead'); }
-      else                 setAnimState('enemyHit');
+      if (G.enemyHp <= 0) {
+        // カットインは最後のモンスター（ボス）を倒した時だけ
+        if (G.waveIdx >= G.wave.length - 1) showHeroCutin();
+        setAnimState('enemyDead');
+      }
+      else setAnimState('enemyHit');
       break;
     }
     case 'enemyHit':
@@ -1012,9 +1082,23 @@ function onAnimEnd() {
       break;
     case 'enemyDead':
       SFX.enemyDead();
-      stopBattleLoop();
-      // カットイン（約1.2秒）が見終わってから結果画面へ
-      setTimeout(() => showStageClear(), 600);
+      if (G.waveIdx < G.wave.length - 1) {
+        // 次のモンスター登場！
+        G.waveIdx++;
+        const next = currentEnemy();
+        G.enemyHp = next.maxHp; G.enemyMaxHp = next.maxHp;
+        updateHpBars();
+        setAnimState('enemyEnter');
+        enemyEntrance(next);
+      } else {
+        stopBattleLoop();
+        // カットイン（約1.2秒）が見終わってから結果画面へ
+        setTimeout(() => showStageClear(), 600);
+      }
+      break;
+    case 'enemyEnter':
+      setAnimState('idle');
+      nextQuestion();
       break;
     case 'enemyAttack': {
       const dmg = currentEnemy()?.dmg ?? 1;
@@ -1043,29 +1127,58 @@ function onAnimEnd() {
 // ─── ゲーム進行 ───
 function startStage(stage) {
   G.stage = stage; G.stageWrong = 0;
-  let en, label;
+  // ウェーブ制: ザコ2体＋ボスの3連戦
+  G.wave = buildWave(stage);
+  G.waveIdx = 0;
+  const en = G.wave[0];
+  let label;
   if (isDiffStage(stage)) {
-    // 難易度ステージ: 専用の敵が登場
     const diff = DIFFS[stage - 9];
-    en = DIFF_ENEMIES[stage - 9];
-    G.diffEnemy = en;
     label = `${diff.emoji} ${diff.label} ${MODES[G.mode]?.gsym || ''}`;
   } else {
-    en = ENEMIES[stage];
-    label = `ST.${stage+1}/9 ${MODES[G.mode] ? MODES[G.mode].sym(en.mult) : ''}`;
+    label = `ST.${stage+1}/9 ${MODES[G.mode] ? MODES[G.mode].sym(ENEMIES[stage].mult) : ''}`;
   }
   G.enemyHp = en.maxHp; G.enemyMaxHp = en.maxHp;
   G.combo = 0; G.locked = false;
 
   showScreen('screen-battle');
   $('stage-label').textContent = label;
-  $('enemy-hp-name').textContent = en.name;
+  $('choices').innerHTML = '';
+  $('question-text').textContent = '';
   updateHearts(); updateHpBars(); updateXpBar();
   resizeBattleCanvas();
-  setAnimState('idle');
   BGM.play(isDiffStage(stage) ? 'boss' : 'battle');
   startBattleLoop();
-  nextQuestion();
+  // 1体目の登場演出（終わると nextQuestion が呼ばれる）
+  setAnimState('enemyEnter');
+  enemyEntrance(en);
+}
+
+// ─── モンスター登場演出（名前表示＋セリフ吹き出し＋声） ───
+function enemyEntrance(en) {
+  $('enemy-hp-name').textContent = en.name;
+  updateWaveLabel();
+  const isBoss = G.waveIdx === G.wave.length - 1;
+  const lines  = isBoss ? BOSS_LINES : ENTRY_LINES;
+  const line   = lines[Math.floor(Math.random() * lines.length)];
+  showEnemySerif(line);
+  // 大きいモンスターほど低い声に
+  speak(line, isBoss ? 0.7 : Math.max(0.9, 1.5 - en.mult * 0.1));
+}
+
+function showEnemySerif(text) {
+  const el = $('enemy-serif');
+  if (!el) return;
+  el.textContent = text;
+  el.classList.remove('hidden');
+  el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.add('hidden'), 3000);
+}
+
+function updateWaveLabel() {
+  const el = $('wave-label');
+  if (el && G.wave) el.textContent = `👾${G.waveIdx + 1}/${G.wave.length}`;
 }
 
 let _lastA = 0; // 直前の問題と同じ数を避ける
@@ -1259,7 +1372,7 @@ function showStageClear() {
 
   showScreen('screen-stage-clear');
   const en = currentEnemy();
-  $('clear-detail').textContent = `${en.name} をたおした！${healed ? '　❤️+1 かいふく！' : ''}`;
+  $('clear-detail').textContent = `モンスター3たい ぜんぶたおした！${healed ? '　❤️+1 かいふく！' : ''}`;
   $('clear-icon').textContent = ['🎉','✨','🌟','💪','🔥','⚡','🏆','🎊','👑','🌱','🌟','🔥'][G.stage] || '🎉';
 
   const mr = $('medal-result');
@@ -1668,7 +1781,11 @@ function initEvents() {
   on('btn-clear-home',   () => showHome());
   on('btn-go-home',      () => showHome());
   on('btn-vic-home',     () => showHome());
-  on('btn-quit-battle',  () => { stopBattleLoop(); BGM.stop(); showHome(); });
+  on('btn-quit-battle',  () => {
+    stopBattleLoop(); BGM.stop();
+    if (window.speechSynthesis) speechSynthesis.cancel();
+    showHome();
+  });
   document.querySelectorAll('.mode-tab').forEach(b => {
     b.addEventListener('click', () => {
       curMode = b.dataset.mode;
@@ -1678,6 +1795,7 @@ function initEvents() {
   });
   on('btn-mute', () => {
     MUTED = !MUTED;
+    if (MUTED && window.speechSynthesis) speechSynthesis.cancel();
     const btn = document.getElementById('btn-mute');
     if (btn) btn.textContent = MUTED ? '🔇' : '🔊';
   });
@@ -1701,6 +1819,7 @@ function startGame(stage = 0) {
     locked:false, heroAttackType:'beam',
     questionFlash:0,
     shake:0, impactT:0, impactPow:1, particles:[], dmgPops:[],
+    wave:null, waveIdx:0,
   };
   startStage(stage);
 }

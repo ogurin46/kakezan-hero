@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>けいさんヒーロー</title>
   <!-- ?v= はキャッシュバスター: 更新時に数字を上げると全端末に即反映される -->
-  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
 <div id="app">
@@ -102,6 +102,7 @@
         <div id="hit-flash" class="hidden"></div>
       </div>
       <div id="atk-label" class="hidden"></div>
+      <div id="enemy-serif" class="hidden"></div>
       <div id="hero-cutin" class="hidden">
         <div class="cutin-band"></div>
         <div class="cutin-face"></div>
@@ -110,6 +111,7 @@
     </div>
 
     <div id="battle-hp-row">
+      <span id="wave-label"></span>
       <span class="hp-name" id="enemy-hp-name"></span>
       <div class="hp-bar-wrap"><div id="enemy-hp-bar" class="hp-bar enemy-bar"></div></div>
     </div>
@@ -167,6 +169,6 @@
   </section>
 
 </div>
-<script src="game.js?v=8"></script>
+<script src="game.js?v=9"></script>
 </body>
 </html>
