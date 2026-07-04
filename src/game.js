@@ -1664,6 +1664,7 @@ function initEvents() {
     else startStage(G.stage+1);
   });
   on('btn-retry',        () => { G.heroHp = 5; G.heroMaxHp = 5; startStage(G.stage); });
+  on('btn-clear-retry',  () => startStage(G.stage)); // 同じステージにもう一回挑戦（メダル再挑戦用）
   on('btn-clear-home',   () => showHome());
   on('btn-go-home',      () => showHome());
   on('btn-vic-home',     () => showHome());

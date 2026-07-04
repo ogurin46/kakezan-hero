@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>けいさんヒーロー</title>
   <!-- ?v= はキャッシュバスター: 更新時に数字を上げると全端末に即反映される -->
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 <div id="app">
@@ -135,7 +135,10 @@
       <div id="score-display"></div>
       <div id="xp-gained"></div>
       <button id="btn-next-stage" class="big-btn">つぎのステージへ ▶</button>
-      <button id="btn-clear-home" class="sub-btn">ホームへ 🏠</button>
+      <div class="clear-btn-row">
+        <button id="btn-clear-retry" class="sub-btn">🔁 もういっかい</button>
+        <button id="btn-clear-home" class="sub-btn">ホームへ 🏠</button>
+      </div>
     </div>
   </section>
 
@@ -164,6 +167,6 @@
   </section>
 
 </div>
-<script src="game.js?v=7"></script>
+<script src="game.js?v=8"></script>
 </body>
 </html>
