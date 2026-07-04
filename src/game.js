@@ -122,6 +122,53 @@ function speak(text, pitch = 1, rate = 1.0) {
   } catch (e) {}
 }
 
+// ─── 事前生成したセリフ音声（Kokoro TTS製・人の声） ───
+// 端末内蔵の合成音声はロボ声になりがちなので、音声ファイルを優先して使う。
+// 再生できない場合のみ speak()（Web Speech API）にフォールバック
+const SERIF_AUDIO = {};
+function preloadSerifAudio() {
+  ENTRY_LINES.forEach((_, i) => { SERIF_AUDIO[`e${i}`] = new Audio(`audio/serif_e${i}.mp3`); });
+  BOSS_LINES.forEach((_, i)  => { SERIF_AUDIO[`b${i}`] = new Audio(`audio/serif_b${i}.mp3`); });
+  Object.values(SERIF_AUDIO).forEach(a => { a.preload = 'auto'; });
+}
+
+// iOSは音声ごとに一度ユーザー操作起点の再生が必要なため、最初のタップで全部解放する
+let _serifUnlocked = false;
+function unlockSerifAudio() {
+  if (_serifUnlocked) return;
+  _serifUnlocked = true;
+  Object.values(SERIF_AUDIO).forEach(a => {
+    a.volume = 0;
+    const p = a.play();
+    if (p && p.then) {
+      p.then(() => { a.pause(); a.currentTime = 0; a.volume = 1; })
+       .catch(() => { a.volume = 1; });
+    } else { a.volume = 1; }
+  });
+}
+
+function stopSerif() {
+  Object.values(SERIF_AUDIO).forEach(a => {
+    if (!a.paused) { a.pause(); a.currentTime = 0; }
+  });
+  if (window.speechSynthesis) speechSynthesis.cancel();
+}
+
+function playSerif(key, fallbackText, pitch, rate) {
+  if (MUTED) return;
+  stopSerif();
+  const a = SERIF_AUDIO[key];
+  if (a) {
+    try {
+      a.currentTime = 0; a.volume = 1;
+      const p = a.play(); // 未読み込みでも play() が読み込みから始めてくれる
+      if (p && p.catch) p.catch(() => speak(fallbackText, pitch, rate));
+      return;
+    } catch (e) {}
+  }
+  speak(fallbackText, pitch, rate);
+}
+
 // 現在のステージの敵（ウェーブ内の現在のモンスター）
 function currentEnemy() {
   return (G.wave && G.wave[G.waveIdx]) || ENEMIES[Math.min(G.stage, 8)];
@@ -133,17 +180,17 @@ function buildWave(stage) {
   let i2;
   do { i2 = Math.floor(Math.random() * MINIONS.length); } while (i2 === i1);
   if (isDiffStage(stage)) {
-    const hpBase = { easy:8, normal:10, hard:12 }[DIFFS[stage - 9].key];
+    const hpBase = { easy:13, normal:16, hard:19 }[DIFFS[stage - 9].key];
     return [
       { ...MINIONS[i1],             maxHp: hpBase },
-      { ...MINIONS[i2],             maxHp: hpBase + 1 },
-      { ...DIFF_ENEMIES[stage - 9], maxHp: hpBase + 3 },
+      { ...MINIONS[i2],             maxHp: hpBase + 2 },
+      { ...DIFF_ENEMIES[stage - 9], maxHp: hpBase + 5 },
     ];
   }
   return [
-    { ...MINIONS[i1],    maxHp: 8  + Math.floor(stage / 3) },
-    { ...MINIONS[i2],    maxHp: 9  + Math.floor(stage / 3) },
-    { ...ENEMIES[stage], maxHp: 10 + Math.floor(stage / 2) },
+    { ...MINIONS[i1],    maxHp: 14 + Math.floor(stage / 3) },
+    { ...MINIONS[i2],    maxHp: 15 + Math.floor(stage / 3) },
+    { ...ENEMIES[stage], maxHp: 18 + Math.floor(stage / 2) },
   ];
 }
 
@@ -1184,10 +1231,11 @@ function enemyEntrance(en) {
   updateWaveLabel();
   const isBoss = G.waveIdx === G.wave.length - 1;
   const lines  = isBoss ? BOSS_LINES : ENTRY_LINES;
-  const line   = lines[Math.floor(Math.random() * lines.length)];
+  const idx    = Math.floor(Math.random() * lines.length);
+  const line   = lines[idx];
   showEnemySerif(line);
-  // ボスは少し低め・ゆっくり、ザコは少し高め（自然な声の範囲で）
-  speak(line, isBoss ? 0.85 : 1.1, isBoss ? 0.95 : 1.0);
+  // 事前生成した人の声（ザコ=女性/ボス=男性）を再生。無ければTTSにフォールバック
+  playSerif((isBoss ? 'b' : 'e') + idx, line, isBoss ? 0.85 : 1.1, isBoss ? 0.95 : 1.0);
 }
 
 function showEnemySerif(text) {
@@ -1811,7 +1859,7 @@ function initEvents() {
   on('btn-vic-home',     () => showHome());
   on('btn-quit-battle',  () => {
     stopBattleLoop(); BGM.stop();
-    if (window.speechSynthesis) speechSynthesis.cancel();
+    stopSerif();
     showHome();
   });
   document.querySelectorAll('.mode-tab').forEach(b => {
@@ -1823,7 +1871,7 @@ function initEvents() {
   });
   on('btn-mute', () => {
     MUTED = !MUTED;
-    if (MUTED && window.speechSynthesis) speechSynthesis.cancel();
+    if (MUTED) stopSerif();
     const btn = document.getElementById('btn-mute');
     if (btn) btn.textContent = MUTED ? '🔇' : '🔊';
   });
@@ -1863,6 +1911,7 @@ window.addEventListener('DOMContentLoaded', () => {
   initEvents();
   initTitle();
   preloadImages(() => {});
+  preloadSerifAudio();
   // 最初のタップで AudioContext を解放（これが無いとBGM/効果音が再生されない）。
   // スマホ(特にiOS Safari)は touchend でしか解放されないことがあるため
   // 複数のイベントで解放を試みる。さらに無音バッファを1つ鳴らして確実にする
@@ -1877,6 +1926,7 @@ window.addEventListener('DOMContentLoaded', () => {
       const src = ac.createBufferSource();
       src.buffer = buf; src.connect(ac.destination); src.start(0);
     } catch (e) {}
+    unlockSerifAudio(); // セリフ音声ファイルも同時に解放
   };
   ['pointerdown', 'touchend', 'keydown'].forEach(ev =>
     document.addEventListener(ev, unlockAudio, { once: true, passive: true }));
