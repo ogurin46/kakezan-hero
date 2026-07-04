@@ -132,18 +132,43 @@ function preloadSerifAudio() {
   Object.values(SERIF_AUDIO).forEach(a => { a.preload = 'auto'; });
 }
 
-// iOSは音声ごとに一度ユーザー操作起点の再生が必要なため、最初のタップで全部解放する
+// iOSは音声ごとに一度ユーザー操作起点の再生が必要なため、最初のタップで全部解放する。
+// ※ iOSは volume プロパティを無視するので、必ず muted を使うこと
+//   （volume=0 だと全セリフが同時に鳴ってしまう）
 let _serifUnlocked = false;
 function unlockSerifAudio() {
   if (_serifUnlocked) return;
   _serifUnlocked = true;
   Object.values(SERIF_AUDIO).forEach(a => {
-    a.volume = 0;
+    a.muted = true;
     const p = a.play();
     if (p && p.then) {
-      p.then(() => { a.pause(); a.currentTime = 0; a.volume = 1; })
-       .catch(() => { a.volume = 1; });
-    } else { a.volume = 1; }
+      p.then(() => { a.pause(); a.currentTime = 0; a.muted = false; })
+       .catch(() => { a.muted = false; });
+    } else { a.muted = false; }
+  });
+}
+
+// ─── タイトルの掛け声「けいさんヒーロー！」（10人のヒーローがみんなで叫ぶ演出） ───
+const TITLE_VOICES = [];
+function preloadTitleVoices() {
+  for (let i = 0; i < 6; i++) {
+    const a = new Audio(`audio/title_v${i}.mp3`);
+    a.preload = 'auto';
+    TITLE_VOICES.push(a);
+  }
+}
+function playTitleShout() {
+  if (MUTED) return;
+  TITLE_VOICES.forEach(a => {
+    // わずかにタイミングをずらして「みんなで叫んでる」感を出す
+    setTimeout(() => {
+      try {
+        a.currentTime = 0;
+        const p = a.play();
+        if (p && p.catch) p.catch(() => {});
+      } catch (e) {}
+    }, Math.random() * 140);
   });
 }
 
@@ -332,7 +357,12 @@ function initTitle() {
   spawnTitleStars('title-stars');
   BGM.play('title');
   const scr = $('screen-title');
-  scr.addEventListener('click', showSaveSelect, { once: true });
+  scr.addEventListener('click', onTitleTap, { once: true });
+}
+
+function onTitleTap() {
+  playTitleShout(); // みんなで「けいさんヒーロー！」
+  showSaveSelect();
 }
 
 // ─── セーブ選択 ───
@@ -1912,6 +1942,7 @@ window.addEventListener('DOMContentLoaded', () => {
   initTitle();
   preloadImages(() => {});
   preloadSerifAudio();
+  preloadTitleVoices();
   // 最初のタップで AudioContext を解放（これが無いとBGM/効果音が再生されない）。
   // スマホ(特にiOS Safari)は touchend でしか解放されないことがあるため
   // 複数のイベントで解放を試みる。さらに無音バッファを1つ鳴らして確実にする
