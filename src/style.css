@@ -603,7 +603,7 @@ h1 {
   border-top: 3px solid #fde68a;
   border-bottom: 3px solid #fde68a;
   box-shadow: 0 0 40px rgba(96,165,250,0.6);
-  animation: cutinBand 1.2s ease-out forwards;
+  animation: cutinBand 2.2s ease-out forwards;
 }
 @keyframes cutinBand {
   0%   { transform: translateY(-50%) skewY(-5deg) scaleX(0); opacity: 1; }
@@ -617,7 +617,7 @@ h1 {
   background-size: 500% 200%;
   background-repeat: no-repeat;
   filter: drop-shadow(0 0 20px rgba(255,255,255,0.85));
-  animation: cutinFace 1.2s cubic-bezier(0.22,1,0.36,1) forwards;
+  animation: cutinFace 2.2s cubic-bezier(0.22,1,0.36,1) forwards;
 }
 @keyframes cutinFace {
   0%   { transform: translate(-260%, -50%) scale(0.8); opacity: 0; }
@@ -633,7 +633,7 @@ h1 {
   letter-spacing: 0.1em; white-space: nowrap;
   text-shadow: 0 0 16px rgba(250,204,21,0.9), 0 2px 0 rgba(0,0,0,0.6),
                2px 2px 6px rgba(0,0,0,0.8);
-  animation: cutinText 1.2s ease-out forwards;
+  animation: cutinText 2.2s ease-out forwards;
 }
 @keyframes cutinText {
   0%   { transform: translateX(-50%) scale(2.4); opacity: 0; }

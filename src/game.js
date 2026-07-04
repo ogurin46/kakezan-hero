@@ -88,12 +88,36 @@ const BOSS_LINES = [
 ];
 
 // 日本語音声でしゃべる（Web Speech API）
-function speak(text, pitch = 1, rate = 1.05) {
+// できるだけ自然な声を選ぶ: Google音声 → プレミアム/ニューラル → Siri系(Kyokoなど) → 先頭
+let _jaVoice = null;
+function _pickJaVoice() {
+  if (!window.speechSynthesis) return null;
+  const vs = speechSynthesis.getVoices()
+    .filter(v => v.lang && v.lang.replace('_', '-').toLowerCase().startsWith('ja'));
+  if (!vs.length) return null;
+  return vs.find(v => /Google/i.test(v.name))
+      || vs.find(v => /premium|enhanced|natural|neural/i.test(v.name))
+      || vs.find(v => /Kyoko|Otoya|O-?ren|Hattori/i.test(v.name))
+      || vs[0];
+}
+if (window.speechSynthesis) {
+  _jaVoice = _pickJaVoice();
+  speechSynthesis.onvoiceschanged = () => { _jaVoice = _pickJaVoice(); };
+}
+
+function speak(text, pitch = 1, rate = 1.0) {
   if (MUTED || !window.speechSynthesis) return;
   try {
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'ja-JP'; u.pitch = pitch; u.rate = rate; u.volume = 0.9;
+    if (!_jaVoice) _jaVoice = _pickJaVoice();
+    if (_jaVoice) u.voice = _jaVoice;
+    u.lang = 'ja-JP'; u.pitch = pitch; u.rate = rate; u.volume = 1;
+    // iOSはTTS再生中にWeb Audio(BGM/効果音)が中断されることがあるため、
+    // 読み終わったら AudioContext を復帰させる
+    u.onend = u.onerror = () => {
+      try { if (AC && AC.state !== 'running') AC.resume(); } catch (e) {}
+    };
     speechSynthesis.speak(u);
   } catch (e) {}
 }
@@ -1056,7 +1080,7 @@ function showHeroCutin() {
     n.style.animation = 'none'; void n.offsetWidth; n.style.animation = '';
   });
   clearTimeout(el._t);
-  el._t = setTimeout(() => el.classList.add('hidden'), 1250);
+  el._t = setTimeout(() => el.classList.add('hidden'), 2300);
 }
 
 // ─── アニメーション終了 ───
@@ -1092,8 +1116,8 @@ function onAnimEnd() {
         enemyEntrance(next);
       } else {
         stopBattleLoop();
-        // カットイン（約1.2秒）が見終わってから結果画面へ
-        setTimeout(() => showStageClear(), 600);
+        // カットイン（約2.2秒）が見終わってから結果画面へ
+        setTimeout(() => showStageClear(), 1800);
       }
       break;
     case 'enemyEnter':
@@ -1162,8 +1186,8 @@ function enemyEntrance(en) {
   const lines  = isBoss ? BOSS_LINES : ENTRY_LINES;
   const line   = lines[Math.floor(Math.random() * lines.length)];
   showEnemySerif(line);
-  // 大きいモンスターほど低い声に
-  speak(line, isBoss ? 0.7 : Math.max(0.9, 1.5 - en.mult * 0.1));
+  // ボスは少し低め・ゆっくり、ザコは少し高め（自然な声の範囲で）
+  speak(line, isBoss ? 0.85 : 1.1, isBoss ? 0.95 : 1.0);
 }
 
 function showEnemySerif(text) {
@@ -1246,9 +1270,10 @@ function makeWrongChoices(q) {
 function nextQuestion() {
   G.locked = false;
   G.questionFlash = 18; // 敵が問題を「撃ってくる」Canvas演出
+  // 問題は「ステージの段」で固定（敵キャラが誰でもステージ1なら 1×□）
   G.question = isDiffStage(G.stage)
     ? makeDiffQuestion(G.mode, DIFFS[G.stage - 9].key)
-    : makeQuestion(G.mode, currentEnemy().mult);
+    : makeQuestion(G.mode, G.stage + 1);
   $('question-text').textContent = G.question.text;
   // 問題ボックスの登場アニメーション
   const qbox = $('question-box');
@@ -1272,6 +1297,9 @@ function nextQuestion() {
 function onAnswer(val, btn) {
   if (G.locked || G.animState !== 'idle') return;
   G.locked = true;
+  // タップ（ユーザー操作）のタイミングで AudioContext を確実に復帰させる
+  // （iOSでTTS後にBGM/効果音が止まったままになる対策）
+  if (!MUTED) getAC();
   document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
 
   if (val === G.question.correct) {
