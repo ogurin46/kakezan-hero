@@ -1214,7 +1214,8 @@ function showAtkLabel(text) {
 // ─── レベルアップ ───
 function checkLevelUp(oldXp, newXp) {
   const oldLv = getLevel(oldXp), newLv = getLevel(newXp);
-  if (newLv > oldLv) showLevelUpNotification(newLv);
+  // 攻撃演出が終わってから表示（演出と重なって見えづらくなるのを防ぐ）
+  if (newLv > oldLv) setTimeout(() => showLevelUpNotification(newLv), 1500);
 }
 function showLevelUpNotification(lv) {
   SFX.levelUp();
@@ -1263,8 +1264,25 @@ function showStageClear() {
 
   const mr = $('medal-result');
   if (mr) {
-    mr.className = gotMedal ? 'medal-get' : 'medal-miss';
-    mr.textContent = gotMedal ? '🏅 メダル ゲット！' : 'ノーミスクリアで 🏅メダル！';
+    if (gotMedal) {
+      // メダル獲得アニメーション: 回転しながら登場＋キラキラが飛び散る
+      let sparks = '';
+      for (let i = 0; i < 8; i++) {
+        const a  = (i / 8) * Math.PI * 2 - Math.PI / 2;
+        const dx = Math.round(Math.cos(a) * 74);
+        const dy = Math.round(Math.sin(a) * 58);
+        sparks += `<span class="medal-spark" style="--dx:${dx}px;--dy:${dy}px;animation-delay:${(0.55 + (i % 4) * 0.07).toFixed(2)}s">✨</span>`;
+      }
+      mr.className = 'medal-get';
+      mr.innerHTML = `
+        <span class="medal-icon">🏅</span>
+        <span class="medal-text">メダル ゲット！</span>
+        ${sparks}`;
+      setTimeout(() => SFX.medal(), 550);
+    } else {
+      mr.className = 'medal-miss';
+      mr.textContent = 'ノーミスクリアで 🏅メダル！';
+    }
   }
 
   $('score-display').textContent = `スコア: ${G.score}`;
@@ -1460,6 +1478,13 @@ const SFX = {
   },
   levelUp() {
     [262,330,392,523,659].forEach((f, i) => tone(f, 0.10, 0.22, 'triangle', i * 0.07));
+  },
+  medal() {
+    // メダル獲得ファンファーレ: 明るいアルペジオ＋シャラーンという輝き
+    [659, 784, 988, 1319].forEach((f, i) => tone(f, 0.14, 0.26, 'triangle', i * 0.09));
+    sweep(1200, 2600, 0.5, 0.07, 'sine', 0.36);
+    tone(1568, 0.55, 0.16, 'sine', 0.40);
+    tone(1976, 0.40, 0.10, 'sine', 0.48);
   },
   combo(n) {
     const freqs = [392,440,494,523,587,659,740,784,880,988];
