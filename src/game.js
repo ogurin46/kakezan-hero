@@ -56,7 +56,7 @@ const DIFFS = [
 const DIFF_ENEMIES = [
   { name:'ピグモン',     img:'enemy_easy',   mult:3, maxHp:6,  color:'#ef4444', emoji:'🔴', atk:'rush',       dmg:1, imgScale:0.90 },
   { name:'バルタン星人', img:'enemy_hard',   mult:6, maxHp:9,  color:'#94a3b8', emoji:'✂️', atk:'projectile', dmg:2, imgScale:0.80 },
-  { name:'ベリアル',     img:'enemy_beryal', mult:9, maxHp:13, color:'#b91c1c', emoji:'😈', atk:'magic',      dmg:3, imgScale:0.80 },
+  { name:'ベリアル',     img:'enemy_beryal', mult:9, maxHp:13, color:'#b91c1c', emoji:'😈', atk:'magic',      dmg:3, imgScale:0.90 },
 ];
 const isDiffStage = stage => stage >= 9;
 
