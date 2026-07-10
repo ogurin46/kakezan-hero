@@ -53,9 +53,9 @@ const DIFFS = [
 ];
 // 難易度ステージ専用の敵（img/enemy_easy.png など）
 const DIFF_ENEMIES = [
-  { name:'モコゴン',     img:'enemy_easy',   mult:3, maxHp:6,  color:'#ef4444', emoji:'🔴', atk:'rush',       dmg:1 },
-  { name:'シマシマン',   img:'enemy_normal', mult:6, maxHp:9,  color:'#e2e8f0', emoji:'⚪', atk:'projectile', dmg:2 },
-  { name:'ハサミラー',   img:'enemy_hard',   mult:9, maxHp:13, color:'#94a3b8', emoji:'✂️', atk:'magic',      dmg:3 },
+  { name:'ピグモン',     img:'enemy_easy',   mult:3, maxHp:6,  color:'#ef4444', emoji:'🔴', atk:'rush',       dmg:1 },
+  { name:'ダダ',         img:'enemy_normal', mult:6, maxHp:9,  color:'#e2e8f0', emoji:'⚪', atk:'projectile', dmg:2 },
+  { name:'バルタン星人', img:'enemy_hard',   mult:9, maxHp:13, color:'#94a3b8', emoji:'✂️', atk:'magic',      dmg:3 },
 ];
 const isDiffStage = stage => stage >= 9;
 
