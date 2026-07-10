@@ -53,9 +53,9 @@ const DIFFS = [
 ];
 // 難易度ステージ専用の敵（img/enemy_easy.png など）
 const DIFF_ENEMIES = [
-  { name:'ピグモン',     img:'enemy_easy',   mult:3, maxHp:6,  color:'#ef4444', emoji:'🔴', atk:'rush',       dmg:1 },
-  { name:'ダダ',         img:'enemy_normal', mult:6, maxHp:9,  color:'#e2e8f0', emoji:'⚪', atk:'projectile', dmg:2 },
-  { name:'バルタン星人', img:'enemy_hard',   mult:9, maxHp:13, color:'#94a3b8', emoji:'✂️', atk:'magic',      dmg:3 },
+  { name:'ピグモン',     img:'enemy_easy',   mult:3, maxHp:6,  color:'#ef4444', emoji:'🔴', atk:'rush',       dmg:1, imgScale:0.90 },
+  { name:'ダダ',         img:'enemy_normal', mult:6, maxHp:9,  color:'#e2e8f0', emoji:'⚪', atk:'projectile', dmg:2, imgScale:0.80 },
+  { name:'バルタン星人', img:'enemy_hard',   mult:9, maxHp:13, color:'#94a3b8', emoji:'✂️', atk:'magic',      dmg:3, imgScale:0.60 },
 ];
 const isDiffStage = stage => stage >= 9;
 
@@ -578,7 +578,7 @@ function drawEnemy(c, x, y, enemy, flash = 0, shakeX = 0, deadProgress = 0, scal
 
   const img = CHAR_IMGS[enemy.img || `enemy_${enemy.mult}`];
   if (img) {
-    const h = cv ? cv.height * (0.40 + enemy.mult * 0.018) : 100;
+    const h = (cv ? cv.height * (0.40 + enemy.mult * 0.018) : 100) * (enemy.imgScale || 1);
     c.drawImage(img, -h/2, -h, h, h);
   } else {
     ENEMY_DRAW[enemy.mult](c, enemy, flash);
