@@ -314,7 +314,7 @@ const ENEMIES = [
   { name:'サイバーゴン', img:'enemy_7', mult:6, maxHp:10, color:'#38bdf8', emoji:'🤖', atk:'projectile', dmg:2 },
   { name:'ダークマジン', img:'enemy_8', mult:7, maxHp:12, color:'#c084fc', emoji:'🧙', atk:'magic',      dmg:2 },
   { name:'ゴーレマン',   img:'enemy_9', mult:8, maxHp:14, color:'#a8a29e', emoji:'🗿', atk:'rush',       dmg:3 },
-  { name:'魔王ザグロス', img:'enemy_normal', mult:9, maxHp:18, color:'#ff4500', emoji:'👹', atk:'magic', dmg:3 },
+  { name:'魔王ザグロス', img:'enemy_normal', mult:9, maxHp:18, color:'#ff4500', emoji:'👹', atk:'magic', dmg:3, imgScale:0.80 },
 ];
 
 // ─── ゲーム状態 ───
