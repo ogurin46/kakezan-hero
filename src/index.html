@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>けいさんヒーロー</title>
   <!-- ?v= はキャッシュバスター: 更新時に数字を上げると全端末に即反映される -->
-  <link rel="stylesheet" href="style.css?v=13">
+  <link rel="stylesheet" href="style.css?v=14">
 </head>
 <body>
 <div id="app">
@@ -20,7 +20,7 @@
     </div>
     <p class="tap-to-start">タップでスタート！</p>
     <div class="title-bottom-area">
-      <img id="title-hero-img-main" src="img/hero全体_transparent.png" class="title-hero-zenbody" alt="ヒーローたち">
+      <img id="title-hero-img-main" src="img/集結.png" class="title-hero-zenbody" alt="ヒーローたち">
     </div>
   </section>
 
@@ -50,10 +50,14 @@
     <div class="title-bg-stars" id="hero-sel-stars"></div>
     <div class="hero-select-inner">
       <p class="hero-select-header">ヒーローを えらんでね！</p>
-      <div id="hero-select-image-wrap">
-        <img id="hero-select-img" src="img/hero選択_transparent.png" alt="ヒーロー選択">
-        <div id="hero-select-overlay"></div>
+      <div class="hero-carousel-row">
+        <button class="hero-carousel-btn" id="hero-prev-btn">◀</button>
+        <div id="hero-select-image-wrap">
+          <img id="hero-carousel-img" src="" alt="">
+        </div>
+        <button class="hero-carousel-btn" id="hero-next-btn">▶</button>
       </div>
+      <div id="hero-carousel-dots"></div>
       <p id="hero-select-name"></p>
       <div class="hero-select-footer">
         <button id="btn-hero-confirm" class="big-btn pulse-btn">このヒーローでスタート！ ▶</button>
@@ -169,6 +173,6 @@
   </section>
 
 </div>
-<script src="game.js?v=13"></script>
+<script src="game.js?v=14"></script>
 </body>
 </html>

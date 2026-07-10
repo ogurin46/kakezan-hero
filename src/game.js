@@ -4,16 +4,16 @@ const $ = id => document.getElementById(id);
 
 // ─── ヒーローデータ (10種) ───
 const HEROES = [
-  { id:0, name:'タイガ',       col:'#f0f0f0', acc:'#ef4444', emoji:'⚡', desc:'スピードタイプ！'   },
-  { id:1, name:'ゼット',       col:'#60a5fa', acc:'#c0c0c0', emoji:'💙', desc:'コスモスタイプ！'  },
-  { id:2, name:'ジード',       col:'#fbbf24', acc:'#1f2937', emoji:'✨', desc:'ダークネスタイプ！' },
-  { id:3, name:'オーブ',       col:'#a78bfa', acc:'#c084fc', emoji:'💜', desc:'マジックタイプ！'  },
-  { id:4, name:'グリード',     col:'#34d399', acc:'#e2e8f0', emoji:'💚', desc:'ネイチャータイプ！' },
-  { id:5, name:'トリガー',     col:'#f97316', acc:'#fbbf24', emoji:'🔥', desc:'パワータイプ！'    },
-  { id:6, name:'デッカー',     col:'#ef4444', acc:'#1f2937', emoji:'🔴', desc:'フレイムタイプ！'  },
-  { id:7, name:'ブレーザー',   col:'#38bdf8', acc:'#e2e8f0', emoji:'🌊', desc:'ブレイブタイプ！'  },
-  { id:8, name:'アーク',       col:'#f472b6', acc:'#fde68a', emoji:'🌸', desc:'ロゼタイプ！'      },
-  { id:9, name:'ウルトラマン', col:'#3b82f6', acc:'#c0c0c0', emoji:'⭐', desc:'アルティメット！'  },
+  { id:0, name:'アーク',      col:'#c0c0c0', acc:'#dc2626', emoji:'⚡', desc:'アーク！',        img:'アーク.png'      },
+  { id:1, name:'オーブ',      col:'#7c3aed', acc:'#ef4444', emoji:'💜', desc:'オーブ！',        img:'オーブ.png'      },
+  { id:2, name:'オメガ',      col:'#60a5fa', acc:'#c0c0c0', emoji:'💙', desc:'ウルトラマンオメガ！', img:'オメガ.png' },
+  { id:3, name:"オメガ'2",    col:'#2563eb', acc:'#e2e8f0', emoji:'🔵', desc:"オメガ'2！",      img:"オメガ'2.png"    },
+  { id:4, name:'ギンガ',      col:'#22d3ee', acc:'#ef4444', emoji:'⭐', desc:'ギンガ！',        img:'ギンガ.png'      },
+  { id:5, name:'ジード',      col:'#fbbf24', acc:'#1f2937', emoji:'✨', desc:'ジード！',        img:'ジード.png'      },
+  { id:6, name:'ゼット',      col:'#ef4444', acc:'#60a5fa', emoji:'🔴', desc:'ゼット！',        img:'ゼット.png'      },
+  { id:7, name:'ゼロ',        col:'#3b82f6', acc:'#dc2626', emoji:'🔥', desc:'ウルトラマンゼロ！', img:'ゼロ.png'     },
+  { id:8, name:'ブレーザー',  col:'#14b8a6', acc:'#e2e8f0', emoji:'🌊', desc:'ブレーザー！',    img:'ブレーザー.png'  },
+  { id:9, name:'ルーブ',      col:'#ec4899', acc:'#3b82f6', emoji:'🌸', desc:'ウルトラマンルーブ！', img:'ルーブ.png'  },
 ];
 
 // ─── キャラクター画像プリロード ───
@@ -25,6 +25,7 @@ function preloadImages(onDone) {
     ['enemy_easy',   'img/enemy_easy.png'],
     ['enemy_normal', 'img/enemy_normal.png'],
     ['enemy_hard',   'img/enemy_hard.png'],
+    ...HEROES.map(h => [h.img, `img/${h.img}`]),
   ]);
   let rem = Object.keys(files).length;
   Object.entries(files).forEach(([key, src]) => {
@@ -390,15 +391,11 @@ function renderSaveSlots() {
       const lv   = getLevel(s.totalXp || 0);
       const hero = HEROES[s.heroId || 0];
       const hid  = s.heroId || 0;
-      const col  = hid % 5;
-      const row  = Math.floor(hid / 5);
-      // hero選択.png スプライト: 5列2行
-      const bpx  = col * 25; // 0,25,50,75,100 (%)
-      const bpy  = row * 100; // 0 or 100 (%)
+      const heroImg = (HEROES[hid] || HEROES[0]).img;
       div.className = 'save-slot save-slot--used';
       div.innerHTML = `
         <div class="save-hero-face" onclick="loadSaveSlot(${i})"
-             style="background-image:url('${HERO_SEL_URL}');background-position:${bpx}% ${bpy}%"></div>
+             style="background-image:url('img/${heroImg}')"></div>
         <div class="save-slot-info" onclick="loadSaveSlot(${i})">
           <span class="save-slot-num">No.${i+1}</span>
           <span class="save-name">${escapeHtml(s.name)}</span>
@@ -454,44 +451,46 @@ function confirmName() {
   showHeroSelect(true);
 }
 
-// ─── ヒーロー選択 ───
+// ─── ヒーロー選択（カルーセル方式） ───
 let _selectedHeroId = 0;
 
 function showHeroSelect(isNew) {
   _selectedHeroId = SAVE.heroId || 0;
   showScreen('screen-hero-select');
   spawnTitleStars('hero-sel-stars');
-  buildHeroSelectOverlay();
-  updateHeroSelectName();
+  renderHeroCarousel();
+  // ボタンイベント（重複登録防止）
+  const prev = $('hero-prev-btn');
+  const next = $('hero-next-btn');
+  prev.onclick = () => { _selectedHeroId = (_selectedHeroId + 9) % 10; renderHeroCarousel(); };
+  next.onclick = () => { _selectedHeroId = (_selectedHeroId + 1) % 10; renderHeroCarousel(); };
 }
 
-function buildHeroSelectOverlay() {
-  const overlay = $('hero-select-overlay');
-  overlay.innerHTML = '';
-  for (let i = 0; i < 10; i++) {
-    const row = Math.floor(i / 5);
-    const col = i % 5;
-    const div = document.createElement('div');
-    div.className = 'hero-cell' + (i === _selectedHeroId ? ' selected' : '');
-    div.style.cssText = `left:${col*20}%;top:${row*50}%;width:20%;height:50%;`;
-    div.dataset.hero = i;
-    div.addEventListener('click', () => selectHeroCell(i));
-    overlay.appendChild(div);
+function renderHeroCarousel() {
+  const hero = HEROES[_selectedHeroId];
+  // 画像を切り替え（アニメーション再起動）
+  const img = $('hero-carousel-img');
+  if (img) {
+    img.src = `img/${hero.img}`;
+    img.alt = hero.name;
+    img.style.animation = 'none';
+    void img.offsetWidth;
+    img.style.animation = '';
   }
-}
-
-function selectHeroCell(id) {
-  _selectedHeroId = id;
-  document.querySelectorAll('.hero-cell').forEach(c =>
-    c.classList.toggle('selected', +c.dataset.hero === id)
-  );
-  updateHeroSelectName();
-}
-
-function updateHeroSelectName() {
-  const h = HEROES[_selectedHeroId];
-  const el = $('hero-select-name');
-  if (el && h) el.textContent = `${h.emoji} ${h.desc}`;
+  // ヒーロー名・説明
+  const nameEl = $('hero-select-name');
+  if (nameEl) nameEl.textContent = `${hero.emoji} ${hero.name}　${hero.desc}`;
+  // ドット更新
+  const dots = $('hero-carousel-dots');
+  if (dots) {
+    dots.innerHTML = '';
+    HEROES.forEach((_, i) => {
+      const d = document.createElement('span');
+      d.className = 'hero-dot' + (i === _selectedHeroId ? ' active' : '');
+      d.onclick = () => { _selectedHeroId = i; renderHeroCarousel(); };
+      dots.appendChild(d);
+    });
+  }
 }
 
 function confirmHeroSelect() {
@@ -1147,10 +1146,10 @@ function setAnimState(s) { G.animState = s; G.animT = 0; }
 function showHeroCutin() {
   const el = $('hero-cutin');
   if (!el) return;
-  const hid  = SAVE.heroId || 0;
+  const hero = HEROES[SAVE.heroId || 0];
   const face = el.querySelector('.cutin-face');
-  face.style.backgroundImage    = `url('${HERO_SEL_URL}')`;
-  face.style.backgroundPosition = `${(hid % 5) * 25}% ${Math.floor(hid / 5) * 100}%`;
+  face.style.backgroundImage    = `url("img/${hero.img}")`;
+  face.style.backgroundPosition = 'center bottom';
   el.classList.remove('hidden');
   // アニメーションを再スタート
   el.querySelectorAll('.cutin-band, .cutin-face, .cutin-text').forEach(n => {
@@ -1934,9 +1933,6 @@ function startGame(stage = 0) {
   };
   startStage(stage);
 }
-
-// ─── ヒーロー顔画像URL（透過済みPNGを直接使用） ───
-const HERO_SEL_URL = 'img/hero選択_transparent.png';
 
 // ─── 起動 ───
 window.addEventListener('DOMContentLoaded', () => {
