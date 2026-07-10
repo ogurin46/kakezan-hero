@@ -7,7 +7,7 @@ const HEROES = [
   { id:0, name:'アーク',      col:'#c0c0c0', acc:'#dc2626', emoji:'⚡', desc:'ウルトラマンアーク',      img:'hero_arc.png'     },
   { id:1, name:'オーブ',      col:'#7c3aed', acc:'#ef4444', emoji:'💜', desc:'ウルトラマンオーブ',      img:'hero_orb.png'     },
   { id:2, name:'オメガ',      col:'#60a5fa', acc:'#c0c0c0', emoji:'💙', desc:'ウルトラマンオメガ',      img:'hero_omega.png'   },
-  { id:3, name:"オメガ'2",    col:'#2563eb', acc:'#e2e8f0', emoji:'🔵', desc:"ウルトラマンオメガ'2",   img:'hero_omega2.png'  },
+  { id:3, name:'テオ',         col:'#2563eb', acc:'#e2e8f0', emoji:'🔵', desc:'ウルトラマンテオ',       img:'hero_teo.png'     },
   { id:4, name:'ギンガ',      col:'#22d3ee', acc:'#ef4444', emoji:'⭐', desc:'ウルトラマンギンガ',      img:'hero_ginga.png'   },
   { id:5, name:'ジード',      col:'#fbbf24', acc:'#1f2937', emoji:'✨', desc:'ウルトラマンジード',      img:'hero_geed.png'    },
   { id:6, name:'ゼット',      col:'#ef4444', acc:'#60a5fa', emoji:'🔴', desc:'ウルトラマンゼット',      img:'hero_zett.png'    },
