@@ -247,12 +247,14 @@ function selectHeroAttack() {
   const avail = getAvailableAttacks();
   const cb    = G.combo;
 
-  if (cb >= 7 && avail.includes('ultra')) return 'ultra_max'; // MAX必殺技
-  if (cb >= 5 && avail.includes('ultra')) return 'ultra';
-  if (cb >= 4 && avail.includes('bomb'))  return 'bomb';
-  if (cb >= 3 && avail.includes('bomb') && Math.random() < 0.65) return 'bomb';
-  if (cb >= 2 && avail.includes('slash')) return Math.random() < 0.6 ? 'slash' : avail[Math.floor(Math.random()*Math.max(1,avail.indexOf('slash')))];
-  if (cb >= 1 && avail.includes('punch')) return Math.random() < 0.5 ? 'punch' : 'beam';
+  // MAX必殺技: コンボ7以上で30%（確定発動しない）
+  if (cb >= 7 && avail.includes('ultra') && Math.random() < 0.30) return 'ultra_max';
+  // 必殺技: コンボ5以上で確率上昇（5=15%, 6=22%, 8=36%, 10=50% 上限）
+  if (cb >= 5 && avail.includes('ultra') && Math.random() < Math.min(0.50, 0.15 + (cb - 5) * 0.07)) return 'ultra';
+  if (cb >= 4 && avail.includes('bomb')  && Math.random() < 0.70) return 'bomb';
+  if (cb >= 3 && avail.includes('bomb')  && Math.random() < 0.55) return 'bomb';
+  if (cb >= 2 && avail.includes('slash') && Math.random() < 0.60) return 'slash';
+  if (cb >= 1 && avail.includes('punch') && Math.random() < 0.50) return 'punch';
   return 'beam';
 }
 
