@@ -4,16 +4,16 @@ const $ = id => document.getElementById(id);
 
 // ─── ヒーローデータ (10種) ───
 const HEROES = [
-  { id:0, name:'アーク',      col:'#c0c0c0', acc:'#dc2626', emoji:'⚡', desc:'アーク！',        img:'アーク.png'      },
-  { id:1, name:'オーブ',      col:'#7c3aed', acc:'#ef4444', emoji:'💜', desc:'オーブ！',        img:'オーブ.png'      },
-  { id:2, name:'オメガ',      col:'#60a5fa', acc:'#c0c0c0', emoji:'💙', desc:'ウルトラマンオメガ！', img:'オメガ.png' },
-  { id:3, name:"オメガ'2",    col:'#2563eb', acc:'#e2e8f0', emoji:'🔵', desc:"オメガ'2！",      img:"オメガ'2.png"    },
-  { id:4, name:'ギンガ',      col:'#22d3ee', acc:'#ef4444', emoji:'⭐', desc:'ギンガ！',        img:'ギンガ.png'      },
-  { id:5, name:'ジード',      col:'#fbbf24', acc:'#1f2937', emoji:'✨', desc:'ジード！',        img:'ジード.png'      },
-  { id:6, name:'ゼット',      col:'#ef4444', acc:'#60a5fa', emoji:'🔴', desc:'ゼット！',        img:'ゼット.png'      },
-  { id:7, name:'ゼロ',        col:'#3b82f6', acc:'#dc2626', emoji:'🔥', desc:'ウルトラマンゼロ！', img:'ゼロ.png'     },
-  { id:8, name:'ブレーザー',  col:'#14b8a6', acc:'#e2e8f0', emoji:'🌊', desc:'ブレーザー！',    img:'ブレーザー.png'  },
-  { id:9, name:'ルーブ',      col:'#ec4899', acc:'#3b82f6', emoji:'🌸', desc:'ウルトラマンルーブ！', img:'ルーブ.png'  },
+  { id:0, name:'アーク',      col:'#c0c0c0', acc:'#dc2626', emoji:'⚡', desc:'ウルトラマンアーク',      img:'hero_arc.png'     },
+  { id:1, name:'オーブ',      col:'#7c3aed', acc:'#ef4444', emoji:'💜', desc:'ウルトラマンオーブ',      img:'hero_orb.png'     },
+  { id:2, name:'オメガ',      col:'#60a5fa', acc:'#c0c0c0', emoji:'💙', desc:'ウルトラマンオメガ',      img:'hero_omega.png'   },
+  { id:3, name:"オメガ'2",    col:'#2563eb', acc:'#e2e8f0', emoji:'🔵', desc:"ウルトラマンオメガ'2",   img:'hero_omega2.png'  },
+  { id:4, name:'ギンガ',      col:'#22d3ee', acc:'#ef4444', emoji:'⭐', desc:'ウルトラマンギンガ',      img:'hero_ginga.png'   },
+  { id:5, name:'ジード',      col:'#fbbf24', acc:'#1f2937', emoji:'✨', desc:'ウルトラマンジード',      img:'hero_geed.png'    },
+  { id:6, name:'ゼット',      col:'#ef4444', acc:'#60a5fa', emoji:'🔴', desc:'ウルトラマンゼット',      img:'hero_zett.png'    },
+  { id:7, name:'ゼロ',        col:'#3b82f6', acc:'#dc2626', emoji:'🔥', desc:'ウルトラマンゼロ',        img:'hero_zero.png'    },
+  { id:8, name:'ブレーザー',  col:'#14b8a6', acc:'#e2e8f0', emoji:'🌊', desc:'ウルトラマンブレーザー',  img:'hero_blazer.png'  },
+  { id:9, name:'ルーブ',      col:'#ec4899', acc:'#3b82f6', emoji:'🌸', desc:'ウルトラマンルーブ',      img:'hero_rube.png'    },
 ];
 
 // ─── キャラクター画像プリロード ───
@@ -479,7 +479,7 @@ function renderHeroCarousel() {
   }
   // ヒーロー名・説明
   const nameEl = $('hero-select-name');
-  if (nameEl) nameEl.textContent = `${hero.emoji} ${hero.name}　${hero.desc}`;
+  if (nameEl) nameEl.textContent = `${hero.emoji} ${hero.desc}`;
   // ドット更新
   const dots = $('hero-carousel-dots');
   if (dots) {
