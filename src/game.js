@@ -1886,6 +1886,14 @@ function on(id, fn) {
 function initEvents() {
   on('btn-name-confirm', () => confirmName());
   on('btn-hero-confirm', () => confirmHeroSelect());
+  on('btn-rhythm', () => startRhythmGame());
+  on('btn-rh-retry', () => startRhythmGame());
+  on('btn-rh-next', () => {
+    if (_rgTimer) { clearInterval(_rgTimer); _rgTimer = null; }
+    RG = null;
+    if (G.stage === 8 || G.stage >= 11) showVictory();
+    else startStage(G.stage + 1);
+  });
   on('btn-next-stage',   () => {
     if (G.stage === 8 || G.stage >= 11) showVictory();
     else startStage(G.stage+1);
@@ -1936,6 +1944,460 @@ function startGame(stage = 0) {
     wave:null, waveIdx:0,
   };
   startStage(stage);
+}
+
+// ══════════════════════════════════════════════════════════════
+// ─── ウルトラリズム ミニゲーム ───────────────────────────────
+// ══════════════════════════════════════════════════════════════
+
+// 3曲：各ビートの音（Hz）配列。配列の長さ＝ノート数
+const RG_SONGS = [
+  {
+    name: 'ウルトラバトル！', bpm: 120,
+    notes: [523,659,784,659, 523,523,659,659, 784,659,523,440, 392,440,523,523],
+    // ♩♩♩♩ | ♪♪♪♪♪♪♪♪ | ♩♩♩♩ | ♪♪♪♪♪♪ ♩
+    // 前半：ゆったり4拍　→　後半：8分音符の連打　→　また4拍　→　8分混合
+    beats: [0,1,2,3, 4,4.5,5,5.5, 6,7,8,9, 10,10.5,11,12],
+  },
+  {
+    name: 'かいじゅうラッシュ！', bpm: 140,
+    notes: [392,392,440,392, 392,440,523,440, 392,523,659,523, 392,440,523,392],
+    // ギャロップリズム（長・短 × 4）→ ゆったり → 8分連打
+    // ♩. ♪ ♩. ♪ | ♩. ♪ ♩. ♪ | ♩ ♩ ♩ ♩ | ♪♪♪♪♩
+    beats: [0,1.5,2,3.5, 4,5.5,6,7.5, 8,9,10,11, 11.5,12,12.5,13],
+  },
+  {
+    name: 'ヒーロータイム！', bpm: 108,
+    notes: [440,523,659,784, 784,784,659,659, 523,440,523,659, 659,659,784,880],
+    // 2分音符（ゆっくり） → 8分連打 → ゆっくり → 8分連打（上昇）
+    // ♩. ♩. ♩. ♩ | ♪♪♪♪ | ♩. ♩. ♩ ♩ | ♪♪♪♩
+    beats: [0,2,4,5, 5.5,6,7,8, 9,11,12,13, 13.5,14,14.5,15],
+  },
+];
+
+let RG = null;
+let _rgTimer = null;
+let _rgCv = null, _rgCtx = null;
+
+// ─── タイミング定数 ───
+const RG_PERFECT  = 0.09; // ±秒でPERFECT
+const RG_GOOD     = 0.17; // ±秒でGOOD
+const RG_APPROACH = 1.2;  // ノートが上から落ちてくる秒数
+const RG_DELAY    = 3.0;  // 開始カウントダウン（秒）
+
+// ─── ゲーム開始 ───
+function startRhythmGame() {
+  const boss = G.wave ? G.wave[G.wave.length - 1] : currentEnemy();
+  const hero = HEROES[_selectedHeroId];
+  const song = RG_SONGS[Math.floor(Math.random() * RG_SONGS.length)];
+  const beatSec = 60 / song.bpm;
+
+  // 音楽を AudioContext でスケジュール（カウントダウン後に開始）
+  const ac = getAC();
+  const musicStart = ac.currentTime + RG_DELAY;
+  const lastBeat = Math.max(...song.beats);
+  if (!MUTED) {
+    song.notes.forEach((freq, i) => {
+      const t = musicStart + song.beats[i] * beatSec;
+      // 次ノートとの間隔で音の長さを決定（短いリズムは短く、長いリズムは長く）
+      const gap = i + 1 < song.beats.length
+        ? (song.beats[i + 1] - song.beats[i]) * beatSec
+        : beatSec;
+      const d = Math.max(gap * 0.75, 0.07);
+      // メロディ (square: 8ビット感)
+      _rgNote(freq,     t, d, 0.16, 'square');
+      // ベース (sine: 1オクターブ下)
+      _rgNote(freq / 2, t, d * 0.8, 0.11, 'sine');
+    });
+    // キック（4ビートごと、曲全体をカバー）
+    for (let b = 0; b <= lastBeat + 4; b += 4) {
+      _rgKick(musicStart + b * beatSec);
+    }
+    // ハイハット（2ビートごと）
+    for (let b = 0; b <= lastBeat + 2; b += 2) {
+      _rgHihat(musicStart + b * beatSec);
+    }
+  }
+
+  // ゲーム状態初期化
+  const totalSec = (lastBeat + 1) * beatSec + 2.0;
+  RG = {
+    boss, hero, song, beatSec,
+    // startPerf: この時刻を基準に nowSec() が -RG_DELAY から始まる
+    startPerf : performance.now() + RG_DELAY * 1000,
+    notes     : song.notes.map((_, i) => ({
+      targetTime: song.beats[i] * beatSec,
+      state: 'falling',  // falling | hit | miss
+      hitAnim: 0, hitType: '',
+    })),
+    totalSec, score: 0, combo: 0, maxCombo: 0,
+    perfect: 0, good: 0, miss: 0,
+    bossHp: song.notes.length, bossMaxHp: song.notes.length,
+    particles: [], popups: [],
+    finished: false, flashAlpha: 0,
+  };
+
+  showScreen('screen-rhythm');
+  _rgCv  = $('rhythm-canvas');
+  _rgCtx = _rgCv.getContext('2d');
+  _rgCv.width  = _rgCv.clientWidth  * devicePixelRatio;
+  _rgCv.height = _rgCv.clientHeight * devicePixelRatio;
+  $('rh-result').classList.add('hidden');
+
+  // 入力イベント（重複登録防止のためフラグ管理）
+  if (!_rgCv._evBound) {
+    _rgCv._evBound = true;
+    _rgCv.addEventListener('touchstart', e => { e.preventDefault(); rgHandleTap(); }, { passive: false });
+    _rgCv.addEventListener('mousedown', () => rgHandleTap());
+  }
+
+  if (_rgTimer) clearInterval(_rgTimer);
+  _rgTimer = setInterval(() => { _rgUpdate(); _rgDraw(); }, 1000 / 60);
+}
+
+// ─── 音生成ヘルパー ───
+function _rgNote(freq, t, dur, vol, type) {
+  const ac = getAC(), osc = ac.createOscillator(), g = ac.createGain();
+  osc.connect(g); g.connect(ac.destination);
+  osc.type = type; osc.frequency.value = freq;
+  g.gain.setValueAtTime(0.001, t);
+  g.gain.linearRampToValueAtTime(vol, t + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  osc.start(t); osc.stop(t + dur + 0.05);
+}
+function _rgKick(t) {
+  const ac = getAC(), osc = ac.createOscillator(), g = ac.createGain();
+  osc.connect(g); g.connect(ac.destination); osc.type = 'sine';
+  osc.frequency.setValueAtTime(110, t);
+  osc.frequency.exponentialRampToValueAtTime(40, t + 0.18);
+  g.gain.setValueAtTime(0.001, t);
+  g.gain.linearRampToValueAtTime(0.28, t + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.20);
+  osc.start(t); osc.stop(t + 0.22);
+}
+function _rgHihat(t) {
+  const ac = getAC(), osc = ac.createOscillator(), g = ac.createGain();
+  osc.connect(g); g.connect(ac.destination);
+  osc.type = 'square'; osc.frequency.value = 7200;
+  g.gain.setValueAtTime(0.001, t);
+  g.gain.linearRampToValueAtTime(0.035, t + 0.004);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.028);
+  osc.start(t); osc.stop(t + 0.035);
+}
+
+// ─── タップ処理 ───
+function rgHandleTap() {
+  if (!RG || RG.finished) return;
+  const now = _rgNow();
+
+  // 最もタイミングが近い落下中ノートを探す
+  let best = null, bestDiff = Infinity;
+  for (const n of RG.notes) {
+    if (n.state !== 'falling') continue;
+    const diff = Math.abs(now - n.targetTime);
+    if (diff < RG_GOOD && diff < bestDiff) { best = n; bestDiff = diff; }
+  }
+
+  if (best) {
+    const type = bestDiff < RG_PERFECT ? 'perfect' : 'good';
+    _rgHit(best, type);
+  }
+  // 空タップはペナルティなし
+}
+
+function _rgHit(n, type) {
+  n.state   = 'hit';
+  n.hitType = type;
+  n.hitAnim = 1.0;
+
+  const dmg = type === 'perfect' ? 2 : 1;
+  RG.bossHp = Math.max(0, RG.bossHp - dmg);
+
+  RG.score += (type === 'perfect' ? 300 : 100) + RG.combo * 10;
+  RG.combo++;
+  if (RG.combo > RG.maxCombo) RG.maxCombo = RG.combo;
+  type === 'perfect' ? RG.perfect++ : RG.good++;
+
+  // パーティクル
+  const cx = _rgCv.width / 2, cy = _rgCv.height * 0.82;
+  const col = type === 'perfect' ? '#facc15' : '#4ade80';
+  for (let i = 0; i < 12; i++) {
+    const a = (Math.PI * 2 * i) / 12;
+    const spd = (2 + Math.random() * 3) * (_rgCv.height / 500);
+    RG.particles.push({ x: cx, y: cy, vx: Math.cos(a)*spd, vy: Math.sin(a)*spd, r: (3+Math.random()*5)*(_rgCv.height/600), alpha: 1, col });
+  }
+
+  // ポップアップテキスト
+  const txt = type === 'perfect' ? 'PERFECT!' : 'GOOD!';
+  RG.popups.push({ x: cx, y: cy - _rgCv.height*0.06, txt, col, alpha: 1, vy: -_rgCv.height*0.0012 });
+
+  RG.flashAlpha = 0.38;
+
+  // 効果音
+  if (!MUTED) {
+    tone(type === 'perfect' ? 880 : 660, 0.10, 0.22, 'sine');
+    if (type === 'perfect') tone(1320, 0.12, 0.15, 'sine', 0.04);
+  }
+
+  if (RG.bossHp <= 0 && !RG.finished) {
+    // ボス撃破！（ゲームは続行するが祝福サウンドを鳴らす）
+    if (!MUTED) SFX.stageClear();
+  }
+}
+
+// ─── 更新 ───
+function _rgNow() { return (performance.now() - RG.startPerf) / 1000; }
+
+function _rgUpdate() {
+  if (!RG || RG.finished) return;
+  const now = _rgNow();
+
+  // ミス判定
+  for (const n of RG.notes) {
+    if (!RG || RG.finished) break;
+    if (n.state !== 'falling') continue;
+    if (now > n.targetTime + RG_GOOD) {
+      n.state = 'miss';
+      RG.combo = 0;
+      RG.miss++;
+      if (!MUTED) tone(200, 0.15, 0.10, 'sawtooth');
+    }
+  }
+
+  // パーティクル更新
+  RG.particles = RG.particles.filter(p => {
+    p.x += p.vx; p.y += p.vy; p.vy += 0.1; p.alpha -= 0.03;
+    return p.alpha > 0;
+  });
+
+  // ポップアップ更新
+  RG.popups = RG.popups.filter(p => {
+    p.y += p.vy; p.alpha -= 0.025;
+    return p.alpha > 0;
+  });
+
+  if (RG.flashAlpha > 0) RG.flashAlpha = Math.max(0, RG.flashAlpha - 0.04);
+
+  // 曲終了チェック
+  if (now > RG.totalSec) _rgEnd();
+}
+
+// ─── 描画 ───
+function _rgDraw() {
+  if (!_rgCv || !_rgCtx) return;
+  const w = _rgCv.width, h = _rgCv.height;
+  const ctx = _rgCtx;
+  ctx.clearRect(0, 0, w, h);
+
+  // 背景
+  const bg = ctx.createRadialGradient(w/2, h*0.35, 0, w/2, h*0.35, h);
+  bg.addColorStop(0, '#0d0d30');
+  bg.addColorStop(1, '#000008');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, w, h);
+
+  const now = RG.finished ? RG.totalSec : _rgNow();
+  const hero = RG.hero;
+  const boss = RG.boss;
+
+  // ─── ボス画像（上部） ───
+  const bossImg = CHAR_IMGS[boss.img];
+  const bossSize = Math.min(w * 0.32, h * 0.28);
+  const bossX = w / 2;
+  const bossTopY = h * 0.02;
+  if (bossImg && bossImg.naturalWidth > 0) {
+    const pulse = RG.bossHp > 0 ? (1 + 0.04 * Math.sin(now * 3)) : 0.6;
+    ctx.save();
+    ctx.globalAlpha = RG.bossHp > 0 ? 1 : 0.35;
+    ctx.shadowColor = boss.color || '#ef4444';
+    ctx.shadowBlur  = 22;
+    ctx.drawImage(bossImg, bossX - bossSize*pulse/2, bossTopY, bossSize*pulse, bossSize*pulse);
+    ctx.restore();
+  }
+
+  // ─── ボス名 & HPバー ───
+  const hpBarTopY = bossTopY + bossSize + h * 0.01;
+  ctx.save();
+  ctx.font = `700 ${Math.round(h*0.022)}px sans-serif`;
+  ctx.fillStyle = '#94a3b8';
+  ctx.textAlign = 'center';
+  ctx.fillText(boss.name, w/2, hpBarTopY);
+  ctx.restore();
+
+  const hpW = w * 0.58, hpH = h * 0.02, hpX = (w - hpW) / 2, hpY = hpBarTopY + h*0.012;
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(hpX, hpY, hpW, hpH);
+  const hpRatio = RG.bossHp / RG.bossMaxHp;
+  ctx.fillStyle = hpRatio > 0.5 ? '#ef4444' : hpRatio > 0.2 ? '#f97316' : '#facc15';
+  ctx.fillRect(hpX, hpY, hpW * Math.max(0, hpRatio), hpH);
+  ctx.strokeStyle = '#334155'; ctx.lineWidth = 1;
+  ctx.strokeRect(hpX, hpY, hpW, hpH);
+
+  // ─── ヒットゾーン（中央下部） ───
+  const hitX = w / 2, hitY = h * 0.82;
+  const hitR = Math.min(w * 0.12, h * 0.072);
+
+  ctx.save();
+  ctx.shadowColor = hero.col;
+  ctx.shadowBlur  = 20 + RG.flashAlpha * 35;
+  ctx.strokeStyle = `rgba(${_rgRgb(hero.col)},${0.55 + RG.flashAlpha * 0.45})`;
+  ctx.lineWidth   = Math.round(h * 0.006);
+  ctx.beginPath(); ctx.arc(hitX, hitY, hitR, 0, Math.PI*2); ctx.stroke();
+  if (RG.flashAlpha > 0.05) {
+    ctx.fillStyle = `rgba(${_rgRgb(hero.col)},${RG.flashAlpha * 0.28})`;
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // TAP ガイド
+  const tapAlpha = 0.35 + 0.25 * Math.sin(now * 5.5);
+  ctx.save();
+  ctx.font = `900 ${Math.round(h*0.03)}px sans-serif`;
+  ctx.fillStyle = `rgba(255,255,255,${tapAlpha})`;
+  ctx.textAlign = 'center';
+  ctx.fillText('タップ！', hitX, hitY + hitR + h*0.045);
+  ctx.restore();
+
+  // ─── ヒーロー画像（下部） ───
+  const heroImg = CHAR_IMGS[hero.img];
+  if (heroImg && heroImg.naturalWidth > 0) {
+    const hs = h * 0.20;
+    ctx.save();
+    ctx.shadowColor = hero.col; ctx.shadowBlur = 18;
+    ctx.drawImage(heroImg, hitX - hs/2, h - hs, hs, hs);
+    ctx.restore();
+  }
+
+  // ─── ノート（落下中） ───
+  const noteR   = Math.min(w * 0.075, h * 0.052);
+  const noteTopY = hpY + hpH + h * 0.03; // HPバーの下から
+
+  for (const n of RG.notes) {
+    if (n.state === 'miss') continue;
+
+    if (n.state === 'hit') {
+      // やられアニメ: 拡大フェードアウト
+      const a = n.hitAnim;
+      n.hitAnim = Math.max(0, n.hitAnim - 0.075);
+      if (a <= 0) continue;
+      const scale = 1 + (1 - a) * 0.9;
+      ctx.save();
+      ctx.globalAlpha = a;
+      ctx.shadowColor = n.hitType === 'perfect' ? '#facc15' : '#4ade80';
+      ctx.shadowBlur  = 24;
+      ctx.fillStyle   = n.hitType === 'perfect' ? '#facc15' : '#4ade80';
+      ctx.beginPath(); ctx.arc(hitX, hitY, noteR * scale, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+      continue;
+    }
+
+    // 落下位置計算
+    const progress = (now - (n.targetTime - RG_APPROACH)) / RG_APPROACH;
+    if (progress < 0 || progress > 1.05) continue;
+    const noteY = noteTopY + (hitY - noteTopY) * Math.min(1, progress);
+    const fadeIn = Math.min(1, progress * 4);
+
+    ctx.save();
+    ctx.globalAlpha = fadeIn;
+    ctx.shadowColor = boss.color || '#ef4444';
+    ctx.shadowBlur  = 14;
+    ctx.fillStyle   = boss.color || '#ef4444';
+    ctx.beginPath(); ctx.arc(hitX, noteY, noteR, 0, Math.PI*2); ctx.fill();
+    // ノート内にボスのミニ画像
+    if (bossImg && bossImg.naturalWidth > 0) {
+      const s = noteR * 1.55;
+      ctx.globalAlpha = fadeIn * 0.9;
+      ctx.drawImage(bossImg, hitX - s/2, noteY - s/2, s, s);
+    }
+    ctx.restore();
+  }
+
+  // ─── パーティクル ───
+  for (const p of RG.particles) {
+    ctx.save();
+    ctx.globalAlpha = p.alpha;
+    ctx.fillStyle = p.col; ctx.shadowColor = p.col; ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  // ─── ポップアップ ───
+  for (const p of RG.popups) {
+    ctx.save();
+    ctx.globalAlpha = p.alpha;
+    ctx.fillStyle = p.col; ctx.shadowColor = p.col; ctx.shadowBlur = 10;
+    ctx.font = `900 ${Math.round(h*0.048)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(p.txt, p.x, p.y);
+    ctx.restore();
+  }
+
+  // ─── スコア & コンボ（上部） ───
+  ctx.save();
+  ctx.font = `700 ${Math.round(h*0.032)}px sans-serif`;
+  ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 6;
+  ctx.fillText(`${RG.score}`, w*0.04, h*0.06);
+  if (RG.combo > 1) {
+    ctx.fillStyle = '#facc15'; ctx.textAlign = 'right';
+    ctx.fillText(`×${RG.combo} コンボ！`, w*0.96, h*0.06);
+  }
+  ctx.restore();
+
+  // ─── カウントダウン ───
+  if (now < 0) {
+    const cnt = now < -2 ? '3' : now < -1 ? '2' : '1';
+    ctx.save();
+    ctx.globalAlpha = 0.92;
+    ctx.font = `900 ${Math.round(h*0.22)}px sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#60a5fa'; ctx.shadowColor = '#60a5fa'; ctx.shadowBlur = 40;
+    ctx.fillText(cnt, w/2, h*0.48);
+    ctx.textBaseline = 'alphabetic';
+    ctx.restore();
+  } else if (now < 0.55) {
+    const a = Math.max(0, 1 - now / 0.55);
+    ctx.save();
+    ctx.globalAlpha = a * 0.9;
+    ctx.font = `900 ${Math.round(h*0.18)}px sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#facc15'; ctx.shadowColor = '#facc15'; ctx.shadowBlur = 40;
+    ctx.fillText('GO!', w/2, h*0.48);
+    ctx.textBaseline = 'alphabetic';
+    ctx.restore();
+  }
+}
+
+function _rgRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `${r},${g},${b}`;
+}
+
+// ─── ゲーム終了 ───
+function _rgEnd() {
+  if (!RG || RG.finished) return;
+  RG.finished = true;
+  if (_rgTimer) { clearInterval(_rgTimer); _rgTimer = null; }
+  _rgDraw(); // 最終フレーム描画
+
+  const total = RG.perfect + RG.good + RG.miss;
+  const hitRate = total > 0 ? Math.round((RG.perfect + RG.good) / total * 100) : 0;
+  const won = RG.bossHp <= 0;
+
+  const icon = won ? '🏆' : hitRate >= 70 ? '⭐' : hitRate >= 40 ? '✨' : '💪';
+  const msg  = won
+    ? `${RG.boss.name}を<br>ぜんぶやっつけた！！`
+    : hitRate >= 70
+    ? `すごい！ ${hitRate}%ヒット！`
+    : hitRate >= 40
+    ? `よくやった！ ${hitRate}%ヒット！`
+    : `もう一回がんばろう！`;
+
+  $('rh-result-icon').textContent = icon;
+  $('rh-result-text').innerHTML =
+    `${msg}<br><small style="color:#94a3b8">コンボ ×${RG.maxCombo} ／ スコア ${RG.score}</small>`;
+  $('rh-result').classList.remove('hidden');
 }
 
 // ─── 起動 ───

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>けいさんヒーロー</title>
   <!-- ?v= はキャッシュバスター: 更新時に数字を上げると全端末に即反映される -->
-  <link rel="stylesheet" href="style.css?v=18">
+  <link rel="stylesheet" href="style.css?v=19">
 </head>
 <body>
 <div id="app">
@@ -140,10 +140,24 @@
       <div id="medal-result"></div>
       <div id="score-display"></div>
       <div id="xp-gained"></div>
+      <button id="btn-rhythm" class="big-btn rhythm-btn">🎵 ウルトラリズム！</button>
       <button id="btn-next-stage" class="big-btn">つぎのステージへ ▶</button>
       <div class="clear-btn-row">
         <button id="btn-clear-retry" class="sub-btn">🔁 もういっかい</button>
         <button id="btn-clear-home" class="sub-btn">ホームへ 🏠</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ウルトラリズム -->
+  <section id="screen-rhythm" class="screen hidden">
+    <canvas id="rhythm-canvas"></canvas>
+    <div id="rh-result" class="rh-result-overlay hidden">
+      <div id="rh-result-icon"></div>
+      <div id="rh-result-text"></div>
+      <div class="rh-btns">
+        <button id="btn-rh-retry" class="big-btn">🔁 もう一回！</button>
+        <button id="btn-rh-next" class="big-btn">つぎへ ▶</button>
       </div>
     </div>
   </section>
@@ -173,6 +187,6 @@
   </section>
 
 </div>
-<script src="game.js?v=22"></script>
+<script src="game.js?v=24"></script>
 </body>
 </html>
