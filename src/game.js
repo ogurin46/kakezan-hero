@@ -2030,7 +2030,7 @@ const RG_DELAY    = 3.0;  // 開始カウントダウン（秒）
 // ─── ゲーム開始 ───
 function startRhythmGame() {
   const boss = G.wave ? G.wave[G.wave.length - 1] : currentEnemy();
-  const hero = HEROES[_selectedHeroId];
+  const hero = HEROES[SAVE.heroId || 0];
   const song = RG_SONGS[Math.floor(Math.random() * RG_SONGS.length)];
   const beatSec = 60 / song.bpm;
 
