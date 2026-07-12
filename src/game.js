@@ -1716,6 +1716,25 @@ const SFX = {
     const freqs = [392,440,494,523,587,659,740,784,880,988];
     tone(freqs[Math.min(n-1, freqs.length-1)], 0.07, 0.20, 'triangle');
   },
+  jkBeam(hand) {
+    if (hand === 'rock') {
+      sweep(250, 1200, 0.34, 0.26, 'sawtooth');
+      sweep(125, 600, 0.30, 0.18, 'sine', 0.04);
+      noiseHit(0.14, 0.14, 450, 0.22);
+    } else if (hand === 'scissors') {
+      sweep(2400, 550, 0.16, 0.22, 'sawtooth');
+      noiseHit(0.14, 0.20, 6000, 0.01);
+      setTimeout(() => { sweep(2200, 480, 0.14, 0.18, 'sawtooth'); noiseHit(0.12,0.16,5000,0.01); }, 80);
+      setTimeout(() => { sweep(2000, 420, 0.13, 0.15, 'sawtooth'); noiseHit(0.11,0.14,4500,0.01); }, 150);
+    } else {
+      noiseHit(0.22, 0.20, 4200);
+      noiseHit(0.18, 0.16, 3500, 0.07);
+      noiseHit(0.14, 0.12, 3000, 0.13);
+      tone(65, 0.12, 0.16, 'square');
+      sweep(350, 1800, 0.22, 0.14, 'square', 0.02);
+      sweep(350, 1800, 0.20, 0.10, 'square', 0.09);
+    }
+  },
 };
 
 // ─── BGM ──────────────────────────────────────────────
@@ -3083,24 +3102,20 @@ function _jkStartCountdown() {
   document.querySelectorAll('.jk-hand').forEach(b => { b.disabled = true; });
 
   const el = $('jk-countdown');
+  el.innerHTML = '<span class="jk-countdown-poi">ぽい！</span>';
   el.classList.remove('hidden');
-  let n = 3;
 
-  const tick = () => {
-    el.innerHTML = '<span class="' + (n > 0 ? 'jk-countdown-num' : 'jk-countdown-poi') + '">' + (n > 0 ? n : 'ぽい！') + '</span>';
-    try {
-      const ac = getAC();
-      const o = ac.createOscillator(), gn = ac.createGain();
-      o.connect(gn); gn.connect(ac.destination);
-      o.frequency.value = n > 0 ? 440 + (4 - n) * 110 : 880;
-      gn.gain.setValueAtTime(0.12, ac.currentTime);
-      gn.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.15);
-      o.start(); o.stop(ac.currentTime + 0.2);
-    } catch (e) {}
-    if (n > 0) { n--; setTimeout(tick, 700); }
-    else { setTimeout(() => { el.classList.add('hidden'); _jkReveal(); }, 500); }
-  };
-  tick();
+  try {
+    const ac = getAC();
+    const o = ac.createOscillator(), gn = ac.createGain();
+    o.connect(gn); gn.connect(ac.destination);
+    o.frequency.value = 880;
+    gn.gain.setValueAtTime(0.15, ac.currentTime);
+    gn.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.18);
+    o.start(); o.stop(ac.currentTime + 0.22);
+  } catch (e) {}
+
+  setTimeout(() => { el.classList.add('hidden'); _jkReveal(); }, 600);
 }
 
 function _jkReveal() {
@@ -3117,6 +3132,15 @@ function _jkReveal() {
   JK.animState = JK.roundResult === 'p1' ? 'beam_p1'
                : JK.roundResult === 'p2' ? 'beam_p2'
                : 'clash';
+  // ビーム効果音
+  if (JK.roundResult === 'p1') {
+    setTimeout(() => SFX.jkBeam(JK.p1Hand), 60);
+  } else if (JK.roundResult === 'p2') {
+    setTimeout(() => SFX.jkBeam(JK.p2Hand), 60);
+  } else {
+    setTimeout(() => { SFX.jkBeam(JK.p1Hand); }, 60);
+    setTimeout(() => { SFX.jkBeam(JK.p2Hand); }, 130);
+  }
 }
 
 function _jkAfterAnim() {
@@ -3197,6 +3221,11 @@ function _jkResetHands() {
   document.querySelectorAll('.jk-hand').forEach(b => {
     b.disabled = false; b.classList.remove('selected');
   });
+  const countEl = $('jk-countdown');
+  if (countEl) {
+    countEl.innerHTML = '<span class="jk-countdown-janken">じゃんけん</span>';
+    countEl.classList.remove('hidden');
+  }
 }
 
 function _jkShowFinal() {

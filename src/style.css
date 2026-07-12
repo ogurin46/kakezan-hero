@@ -866,7 +866,7 @@ h1 {
   overflow:hidden;
   min-height:0;
 }
-.jk-char-wrap { width:40%;display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px;height:100%;transition:transform 0.05s linear; }
+.jk-char-wrap { width:50%;display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px;height:100%;transition:transform 0.05s linear; }
 .jk-char-wrap img { max-width:100%;max-height:clamp(200px,32vh,290px);object-fit:contain;align-self:flex-end; }
 #jk-p2-char-wrap img { transform:scaleX(-1); }
 #jk-field-center { flex:1;height:100%; }
@@ -981,7 +981,7 @@ h1 {
 /* ぐーちょきぱーボタン: キャラクター上のオーバーレイ */
 .jk-ctrl-col {
   position:absolute;bottom:4%;
-  width:40%;z-index:9;
+  width:50%;z-index:9;
   display:flex;flex-direction:column;align-items:center;gap:6px;
   padding:7px 4px;
   background:rgba(0,0,0,.55);
@@ -1027,3 +1027,9 @@ h1 {
   100% { transform:scale(1) rotate(0); opacity:1; }
 }
 .jk-countdown-poi { animation:jk-poi .5s ease forwards; display:inline-block; }
+@keyframes jk-janken-glow {
+  from { opacity:0.6; text-shadow:0 0 12px #a78bfa; }
+  to   { opacity:1;   text-shadow:0 0 28px #c4b5fd, 0 0 8px #fff; }
+}
+.jk-countdown-janken { font-size:0.5em; color:#c4b5fd; display:inline-block;
+  animation:jk-janken-glow 0.9s ease-in-out infinite alternate; }
