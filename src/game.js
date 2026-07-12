@@ -1894,6 +1894,22 @@ function initEvents() {
     if (G.stage === 8 || G.stage >= 11) showVictory();
     else startStage(G.stage + 1);
   });
+  on('btn-janken', () => startJanken());
+  on('btn-jk-cancel', () => showScreen('screen-stage-clear'));
+  on('btn-jk-1p', () => { JK.mode = '1p'; JK.p2IsEnemy = true; initJankenGame(); });
+  on('btn-jk-2p', () => showJankenHeroSelect(1));
+  on('btn-jk-hs-confirm', () => confirmJkHero());
+  on('btn-jk-retry', () => initJankenGame());
+  on('btn-jk-next', () => {
+    if (_jkTimer) { clearInterval(_jkTimer); _jkTimer = null; }
+    JK = null;
+    if (G.stage === 8 || G.stage >= 11) showVictory();
+    else startStage(G.stage + 1);
+  });
+  document.querySelectorAll('.jk-hand').forEach(btn => {
+    btn.addEventListener('click', () => jkSelectHand(+btn.dataset.p, btn.dataset.h));
+    btn.addEventListener('touchend', e => { e.preventDefault(); jkSelectHand(+btn.dataset.p, btn.dataset.h); });
+  });
   on('btn-next-stage',   () => {
     if (G.stage === 8 || G.stage >= 11) showVictory();
     else startStage(G.stage+1);
@@ -2440,6 +2456,343 @@ function _rgEnd() {
   $('rh-result-text').innerHTML =
     `${msg}<br><small style="color:#94a3b8">コンボ ×${RG.maxCombo} ／ スコア ${RG.score}</small>`;
   $('rh-result').classList.remove('hidden');
+}
+
+// ─── じゃんけんゲーム ─────────────────────────────────────────────
+let JK = null;
+let _jkTimer = null;
+
+const JK_EMOJI  = { rock:'👊', scissors:'✌️', paper:'✋' };
+const JK_NAME   = { rock:'グー', scissors:'チョキ', paper:'パー' };
+const JK_BEATS  = { rock:'scissors', scissors:'paper', paper:'rock' };
+
+function jkWho(h1, h2) {
+  if (h1 === h2) return 'draw';
+  return JK_BEATS[h1] === h2 ? 'p1' : 'p2';
+}
+
+function startJanken() {
+  const boss = G.wave ? G.wave[G.wave.length - 1] : currentEnemy();
+  JK = {
+    boss,
+    mode: null,
+    p1HeroId: SAVE.heroId || 0,
+    p2HeroId: ((SAVE.heroId || 0) + 1) % HEROES.length,
+    p2IsEnemy: true,
+    p1Wins: 0, p2Wins: 0,
+    p1Hand: null, p2Hand: null,
+    phase: 'select',
+    animT: 0, animState: 'idle',
+    roundResult: null,
+    particles: [],
+  };
+  $('jk-mode-boss-name').textContent = (boss.emoji || '') + ' ' + boss.name;
+  showScreen('screen-janken-mode');
+}
+
+let _jkHsId = 0;
+function showJankenHeroSelect(playerNum) {
+  JK.heroSelectFor = playerNum;
+  _jkHsId = playerNum === 1 ? JK.p1HeroId : JK.p2HeroId;
+  $('jk-hs-player').textContent = 'P' + playerNum;
+  _renderJkHero(_jkHsId);
+  showScreen('screen-janken-hero');
+  $('jk-hs-prev').onclick = () => { _jkHsId = (_jkHsId + HEROES.length - 1) % HEROES.length; _renderJkHero(_jkHsId); };
+  $('jk-hs-next').onclick = () => { _jkHsId = (_jkHsId + 1) % HEROES.length; _renderJkHero(_jkHsId); };
+}
+
+function _renderJkHero(id) {
+  const h = HEROES[id];
+  $('jk-hs-img').src = 'img/' + h.img;
+  $('jk-hs-img').alt = h.name;
+  $('jk-hs-name').textContent = h.emoji + ' ' + h.name;
+}
+
+function confirmJkHero() {
+  if (JK.heroSelectFor === 1) {
+    JK.p1HeroId = _jkHsId;
+    showJankenHeroSelect(2);
+  } else {
+    JK.p2HeroId = _jkHsId;
+    JK.p2IsEnemy = false;
+    initJankenGame();
+  }
+}
+
+function initJankenGame() {
+  JK.p1Wins = 0; JK.p2Wins = 0;
+  JK.p1Hand = null; JK.p2Hand = null;
+  JK.phase = 'select';
+  JK.animState = 'idle'; JK.animT = 0;
+  JK.particles = [];
+
+  const p1h = HEROES[JK.p1HeroId];
+  const p2h = JK.p2IsEnemy ? null : HEROES[JK.p2HeroId];
+
+  $('jk-p1-char').src = 'img/' + p1h.img;
+  $('jk-p2-char').src = JK.p2IsEnemy ? 'img/' + JK.boss.img + '.png' : 'img/' + p2h.img;
+
+  $('jk-p1-label').textContent = 'P1 ' + p1h.name;
+  $('jk-p2-label').textContent = JK.p2IsEnemy ? JK.boss.name : ('P2 ' + p2h.name);
+
+  $('jk-p2-ctrl').style.display = JK.mode === '1p' ? 'none' : '';
+
+  _jkUpdateScore();
+  _jkResetHands();
+
+  showScreen('screen-janken');
+
+  const cv = $('jk-canvas');
+  cv.width  = cv.clientWidth  * devicePixelRatio;
+  cv.height = cv.clientHeight * devicePixelRatio;
+
+  if (_jkTimer) clearInterval(_jkTimer);
+  _jkTimer = setInterval(_jkDraw, 1000 / 60);
+}
+
+function _jkDraw() {
+  const cv = $('jk-canvas');
+  if (!cv || !JK) return;
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  ctx.clearRect(0, 0, W, H);
+
+  JK.animT++;
+  const t = JK.animT;
+
+  if (JK.animState === 'beam_p1' || JK.animState === 'beam_p2') {
+    _jkDrawBeam(ctx, W, H, JK.animState === 'beam_p1');
+    if (t > 70) { JK.animState = 'idle'; _jkAfterAnim(); }
+  } else if (JK.animState === 'clash') {
+    _jkDrawClash(ctx, W, H);
+    if (t > 80) { JK.animState = 'idle'; _jkAfterAnim(); }
+  }
+
+  JK.particles = JK.particles.filter(p => p.life > 0);
+  JK.particles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = p.life / p.maxLife;
+    ctx.fillStyle = p.color;
+    ctx.shadowColor = p.color; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    p.x += p.vx; p.y += p.vy; p.vy += 0.2; p.life--;
+  });
+}
+
+function _jkDrawBeam(ctx, W, H, fromLeft) {
+  const t = JK.animT;
+  const y = H * 0.5;
+  const p1h = HEROES[JK.p1HeroId];
+  const col = fromLeft
+    ? p1h.col
+    : (JK.p2IsEnemy ? JK.boss.color : HEROES[JK.p2HeroId].col);
+
+  const x1 = fromLeft ? W * 0.28 : W * 0.72;
+  const x2 = fromLeft ? W * 0.72 : W * 0.28;
+  const prog = Math.min(t / 25, 1);
+  const xEnd = x1 + (x2 - x1) * prog;
+
+  ctx.save();
+  ctx.shadowColor = col; ctx.shadowBlur = 24;
+  const g = ctx.createLinearGradient(x1, y, xEnd, y);
+  g.addColorStop(0, col + 'ff'); g.addColorStop(0.8, col + 'aa'); g.addColorStop(1, '#ffffffff');
+  ctx.strokeStyle = g; ctx.lineWidth = 10; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, y); ctx.stroke();
+  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, y); ctx.stroke();
+  ctx.restore();
+
+  if (prog >= 1 && Math.random() < 0.5) {
+    _jkParticle(x2, y, col, 3, 4, 10);
+    _jkParticle(x2, y, '#ffffff', 2, 5, 8);
+  }
+  if (prog >= 1) {
+    const boom = Math.max(0, Math.sin((t - 25) / 20 * Math.PI)) * 28;
+    if (boom > 0) {
+      ctx.save();
+      const eg = ctx.createRadialGradient(x2, y, 0, x2, y, boom);
+      eg.addColorStop(0, '#ffffff'); eg.addColorStop(0.5, col + '99'); eg.addColorStop(1, 'transparent');
+      ctx.fillStyle = eg;
+      ctx.beginPath(); ctx.arc(x2, y, boom, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+  }
+}
+
+function _jkDrawClash(ctx, W, H) {
+  const t = JK.animT;
+  const y = H * 0.5;
+  const cx = W / 2;
+  const p1col = HEROES[JK.p1HeroId].col;
+  const p2col = JK.p2IsEnemy ? JK.boss.color : HEROES[JK.p2HeroId].col;
+  const prog = Math.min(t / 25, 1);
+
+  const drawSide = (x1, col) => {
+    const xEnd = x1 + (cx - x1) * prog;
+    ctx.save();
+    ctx.shadowColor = col; ctx.shadowBlur = 20;
+    const g = ctx.createLinearGradient(x1, y, xEnd, y);
+    g.addColorStop(0, col + 'ff'); g.addColorStop(1, '#ffffff');
+    ctx.strokeStyle = g; ctx.lineWidth = 10; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, y); ctx.stroke();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, y); ctx.stroke();
+    ctx.restore();
+  };
+  drawSide(W * 0.28, p1col);
+  drawSide(W * 0.72, p2col);
+
+  if (prog >= 1) {
+    const boomT = (t - 25) / 30;
+    const boom = Math.max(0, Math.sin(Math.min(boomT, 1) * Math.PI)) * 44;
+    if (boom > 0) {
+      ctx.save();
+      ctx.shadowColor = '#fff'; ctx.shadowBlur = 40;
+      const eg = ctx.createRadialGradient(cx, y, 0, cx, y, boom);
+      eg.addColorStop(0, '#ffffffff');
+      eg.addColorStop(0.35, p1col + 'cc');
+      eg.addColorStop(0.65, p2col + 'cc');
+      eg.addColorStop(1, 'transparent');
+      ctx.fillStyle = eg;
+      ctx.beginPath(); ctx.arc(cx, y, boom, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+    if (Math.random() < 0.45) {
+      const c = Math.random() < 0.5 ? p1col : p2col;
+      const a = Math.random() * Math.PI * 2;
+      _jkParticle(cx + Math.cos(a) * boom * 0.4, y + Math.sin(a) * boom * 0.4, c, 3, 5, 12);
+    }
+  }
+}
+
+function _jkParticle(x, y, color, r, speed, life) {
+  const a = Math.random() * Math.PI * 2;
+  JK.particles.push({
+    x, y, color, r,
+    vx: Math.cos(a) * speed * (0.4 + Math.random() * 0.8),
+    vy: Math.sin(a) * speed * (0.4 + Math.random() * 0.8) - 1.5,
+    life, maxLife: life,
+  });
+}
+
+function jkSelectHand(player, hand) {
+  if (!JK || JK.phase !== 'select') return;
+  if (player === 1) {
+    JK.p1Hand = hand;
+    $('jk-p1-chosen').textContent = '✓';
+    $('jk-p1-hand-btns').querySelectorAll('.jk-hand').forEach(b => {
+      b.classList.toggle('selected', b.dataset.h === hand);
+    });
+  } else {
+    JK.p2Hand = hand;
+    $('jk-p2-chosen').textContent = '✓';
+    $('jk-p2-hand-btns').querySelectorAll('.jk-hand').forEach(b => {
+      b.classList.toggle('selected', b.dataset.h === hand);
+    });
+  }
+
+  const ready = JK.mode === '1p' ? JK.p1Hand !== null
+    : JK.p1Hand !== null && JK.p2Hand !== null;
+  if (ready) {
+    if (JK.mode === '1p') {
+      const hands = ['rock', 'scissors', 'paper'];
+      JK.p2Hand = hands[Math.floor(Math.random() * 3)];
+    }
+    _jkStartCountdown();
+  }
+}
+
+function _jkStartCountdown() {
+  JK.phase = 'countdown';
+  document.querySelectorAll('.jk-hand').forEach(b => { b.disabled = true; });
+
+  const el = $('jk-countdown');
+  el.classList.remove('hidden');
+  let n = 3;
+
+  const tick = () => {
+    el.innerHTML = '<span class="' + (n > 0 ? 'jk-countdown-num' : 'jk-countdown-poi') + '">' + (n > 0 ? n : 'ぽい！') + '</span>';
+    try {
+      const ac = getAC();
+      const o = ac.createOscillator(), gn = ac.createGain();
+      o.connect(gn); gn.connect(ac.destination);
+      o.frequency.value = n > 0 ? 440 + (4 - n) * 110 : 880;
+      gn.gain.setValueAtTime(0.12, ac.currentTime);
+      gn.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.15);
+      o.start(); o.stop(ac.currentTime + 0.2);
+    } catch (e) {}
+    if (n > 0) { n--; setTimeout(tick, 700); }
+    else { setTimeout(() => { el.classList.add('hidden'); _jkReveal(); }, 500); }
+  };
+  tick();
+}
+
+function _jkReveal() {
+  JK.phase = 'reveal';
+  $('jk-p1-chosen').textContent = JK_EMOJI[JK.p1Hand] + ' ' + JK_NAME[JK.p1Hand];
+  $('jk-p2-chosen').textContent = JK_EMOJI[JK.p2Hand] + ' ' + JK_NAME[JK.p2Hand];
+
+  JK.roundResult = jkWho(JK.p1Hand, JK.p2Hand);
+  JK.animT = 0;
+  JK.animState = JK.roundResult === 'p1' ? 'beam_p1'
+               : JK.roundResult === 'p2' ? 'beam_p2'
+               : 'clash';
+}
+
+function _jkAfterAnim() {
+  if (!JK) return;
+  const res = JK.roundResult;
+  let bannerText;
+  if (res === 'p1') {
+    JK.p1Wins++;
+    bannerText = 'P1 の かち！';
+  } else if (res === 'p2') {
+    JK.p2Wins++;
+    bannerText = JK.mode === '1p' ? JK.boss.name + ' の かち！' : 'P2 の かち！';
+  } else {
+    bannerText = 'あいこ！';
+  }
+
+  const banner = $('jk-result-banner');
+  banner.textContent = bannerText;
+  banner.classList.remove('hidden');
+
+  _jkUpdateScore();
+
+  setTimeout(() => {
+    if (!JK) return;
+    banner.classList.add('hidden');
+    if (JK.p1Wins >= 3 || JK.p2Wins >= 3) _jkShowFinal();
+    else _jkResetHands();
+  }, 1400);
+}
+
+function _jkUpdateScore() {
+  const toStars = (n) => '⭐'.repeat(n) + '○'.repeat(3 - n);
+  $('jk-p1-score').textContent = toStars(JK.p1Wins);
+  $('jk-p2-score').textContent = toStars(JK.p2Wins);
+}
+
+function _jkResetHands() {
+  JK.p1Hand = null; JK.p2Hand = null;
+  JK.phase = 'select';
+  $('jk-p1-chosen').textContent = '？';
+  $('jk-p2-chosen').textContent = '？';
+  document.querySelectorAll('.jk-hand').forEach(b => {
+    b.disabled = false; b.classList.remove('selected');
+  });
+}
+
+function _jkShowFinal() {
+  if (_jkTimer) { clearInterval(_jkTimer); _jkTimer = null; }
+  const p1Won = JK.p1Wins >= 3;
+  showScreen('screen-janken-result');
+  $('jk-final-icon').textContent = p1Won ? '🏆' : (JK.mode === '2p' ? '🏅' : '💥');
+  $('jk-final-title').textContent = p1Won
+    ? 'P1 の かちだ！！'
+    : (JK.mode === '1p' ? JK.boss.name + ' に まけた…' : 'P2 の かちだ！！');
+  $('jk-final-score').textContent = 'P1 ' + JK.p1Wins + ' - ' + JK.p2Wins + ' P2';
 }
 
 // ─── 起動 ───

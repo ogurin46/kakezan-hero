@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>けいさんヒーロー</title>
   <!-- ?v= はキャッシュバスター: 更新時に数字を上げると全端末に即反映される -->
-  <link rel="stylesheet" href="style.css?v=19">
+  <link rel="stylesheet" href="style.css?v=20">
 </head>
 <body>
 <div id="app">
@@ -141,6 +141,7 @@
       <div id="score-display"></div>
       <div id="xp-gained"></div>
       <button id="btn-rhythm" class="big-btn rhythm-btn">🎵 ウルトラリズム！</button>
+      <button id="btn-janken" class="big-btn janken-btn">✌️ じゃんけん！</button>
       <button id="btn-next-stage" class="big-btn">つぎのステージへ ▶</button>
       <div class="clear-btn-row">
         <button id="btn-clear-retry" class="sub-btn">🔁 もういっかい</button>
@@ -158,6 +159,100 @@
       <div class="rh-btns">
         <button id="btn-rh-retry" class="big-btn">🔁 もう一回！</button>
         <button id="btn-rh-next" class="big-btn">つぎへ ▶</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- じゃんけんモード選択 -->
+  <section id="screen-janken-mode" class="screen hidden">
+    <div class="jk-mode-inner">
+      <p class="jk-mode-title">✌️ じゃんけん ボーナス！</p>
+      <p class="jk-mode-enemy">あいては <strong id="jk-mode-boss-name"></strong></p>
+      <div class="jk-mode-btns">
+        <button id="btn-jk-1p" class="big-btn jk-mode-btn">
+          <div class="jk-mode-icon">🧑</div>
+          <div>ひとりで</div>
+        </button>
+        <button id="btn-jk-2p" class="big-btn jk-mode-btn">
+          <div class="jk-mode-icon">👥</div>
+          <div>ふたりで</div>
+        </button>
+      </div>
+      <button class="sub-btn" id="btn-jk-cancel">もどる</button>
+    </div>
+  </section>
+
+  <!-- じゃんけんヒーロー選択（2人対戦用） -->
+  <section id="screen-janken-hero" class="screen hidden">
+    <div class="jk-hs-inner">
+      <p class="jk-hs-title"><span id="jk-hs-player"></span> の ヒーローを えらんでね！</p>
+      <div class="hero-carousel-row">
+        <button class="hero-carousel-btn" id="jk-hs-prev">◀</button>
+        <div id="jk-hs-img-wrap">
+          <img id="jk-hs-img" src="" alt="">
+        </div>
+        <button class="hero-carousel-btn" id="jk-hs-next">▶</button>
+      </div>
+      <p id="jk-hs-name" class="jk-hs-name"></p>
+      <button id="btn-jk-hs-confirm" class="big-btn pulse-btn">このヒーロー！ ▶</button>
+    </div>
+  </section>
+
+  <!-- じゃんけん本体 -->
+  <section id="screen-janken" class="screen hidden">
+    <div id="jk-header">
+      <div class="jk-hcol">
+        <span id="jk-p1-label" class="jk-label"></span>
+        <span id="jk-p1-score" class="jk-score"></span>
+      </div>
+      <span class="jk-vs">VS</span>
+      <div class="jk-hcol jk-hcol-right">
+        <span id="jk-p2-label" class="jk-label"></span>
+        <span id="jk-p2-score" class="jk-score"></span>
+      </div>
+    </div>
+    <div id="jk-field">
+      <div id="jk-p1-char-wrap" class="jk-char-wrap">
+        <img id="jk-p1-char" src="" alt="">
+      </div>
+      <div id="jk-field-center">
+        <canvas id="jk-canvas"></canvas>
+        <div id="jk-countdown" class="hidden"></div>
+        <div id="jk-result-banner" class="hidden"></div>
+      </div>
+      <div id="jk-p2-char-wrap" class="jk-char-wrap">
+        <img id="jk-p2-char" src="" alt="">
+      </div>
+    </div>
+    <div id="jk-controls">
+      <div class="jk-ctrl-col" id="jk-p1-ctrl">
+        <div class="jk-chosen" id="jk-p1-chosen">？</div>
+        <div class="jk-hand-row" id="jk-p1-hand-btns">
+          <button class="jk-hand" data-p="1" data-h="rock">👊<span>グー</span></button>
+          <button class="jk-hand" data-p="1" data-h="scissors">✌️<span>チョキ</span></button>
+          <button class="jk-hand" data-p="1" data-h="paper">✋<span>パー</span></button>
+        </div>
+      </div>
+      <div class="jk-ctrl-col" id="jk-p2-ctrl">
+        <div class="jk-chosen" id="jk-p2-chosen">？</div>
+        <div class="jk-hand-row" id="jk-p2-hand-btns">
+          <button class="jk-hand" data-p="2" data-h="rock">👊<span>グー</span></button>
+          <button class="jk-hand" data-p="2" data-h="scissors">✌️<span>チョキ</span></button>
+          <button class="jk-hand" data-p="2" data-h="paper">✋<span>パー</span></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- じゃんけん結果 -->
+  <section id="screen-janken-result" class="screen hidden">
+    <div class="jk-result-inner">
+      <div id="jk-final-icon" class="jk-final-icon"></div>
+      <p id="jk-final-title" class="jk-final-title"></p>
+      <p id="jk-final-score" class="jk-final-score"></p>
+      <div class="jk-result-btns">
+        <button id="btn-jk-retry" class="big-btn">🔁 もういちど</button>
+        <button id="btn-jk-next" class="big-btn">つぎへ ▶</button>
       </div>
     </div>
   </section>
@@ -187,6 +282,6 @@
   </section>
 
 </div>
-<script src="game.js?v=25"></script>
+<script src="game.js?v=26"></script>
 </body>
 </html>
