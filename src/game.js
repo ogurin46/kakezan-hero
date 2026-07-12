@@ -306,7 +306,7 @@ function updateXpBar() {
 
 // ─── 敵データ ───
 const ENEMIES = [
-  { name:'プチスライム', img:'enemy_2', mult:1, maxHp:5,  color:'#4ade80', emoji:'🟢', atk:'rush',       dmg:1 },
+  { name:'スライムキング', img:'enemy_2', mult:1, maxHp:5, color:'#4ade80', emoji:'🟢', atk:'rush',       dmg:1 },
   { name:'バットマン',   img:'enemy_3', mult:2, maxHp:6,  color:'#a78bfa', emoji:'🦇', atk:'projectile', dmg:1 },
   { name:'クモッチ',     img:'enemy_4', mult:3, maxHp:7,  color:'#d97706', emoji:'🕷️', atk:'rush',       dmg:1 },
   { name:'ドクロン',     img:'enemy_5', mult:4, maxHp:8,  color:'#e2e8f0', emoji:'💀', atk:'projectile', dmg:2 },
@@ -1793,40 +1793,88 @@ const BGM_SEQS = {
     [16, 932,2,0.06,'triangle'], [24, 659,2,0.05,'triangle'],
   ]),
 
-  // じゃんけん専用BGM: G major / 168bpm / 明るく戦闘的
-  janken: _makeBgmSeq(60/168/2, 32, [
-    // ─ Melody (sawtooth, G major) ─
-    [0,  784,2,0.13,'sawtooth'], [2,  880,2,0.14,'sawtooth'],
-    [4,  988,4,0.15,'sawtooth'],
-    [8,  880,2,0.13,'sawtooth'], [10, 784,2,0.13,'sawtooth'],
-    [12, 659,4,0.14,'sawtooth'],
-    [16, 784,2,0.13,'sawtooth'], [18, 880,2,0.14,'sawtooth'],
-    [20, 740,2,0.13,'sawtooth'], [22, 659,2,0.12,'sawtooth'],
-    [24, 587,2,0.14,'sawtooth'], [26, 659,2,0.13,'sawtooth'],
-    [28, 740,4,0.15,'sawtooth'],
-    // ─ Counter (triangle) ─
-    [4,  392,2,0.07,'triangle'], [12, 330,2,0.07,'triangle'],
-    [20, 370,2,0.07,'triangle'], [28, 370,2,0.07,'triangle'],
-    // ─ Bass (sine) ─
-    [0,  196,2,0.22,'sine'], [4,  220,2,0.20,'sine'],
-    [8,  196,2,0.22,'sine'], [12, 165,2,0.20,'sine'],
-    [16, 196,2,0.22,'sine'], [20, 185,2,0.20,'sine'],
-    [24, 147,2,0.22,'sine'], [28, 185,2,0.20,'sine'],
-    // ─ Stabs (square) ─
-    [0,  392,1,0.11,'square'], [4,  494,1,0.10,'square'],
-    [8,  392,1,0.11,'square'], [12, 330,1,0.10,'square'],
-    [16, 392,1,0.11,'square'], [20, 370,1,0.10,'square'],
-    [24, 294,1,0.11,'square'], [28, 370,1,0.10,'square'],
-    // ─ Hi-hat (quarter-note grid) ─
-    [0, 1760,0.5,0.05,'square'], [4, 1760,0.5,0.05,'square'],
-    [8, 1760,0.5,0.05,'square'], [12,1760,0.5,0.05,'square'],
-    [16,1760,0.5,0.05,'square'], [20,1760,0.5,0.05,'square'],
-    [24,1760,0.5,0.05,'square'], [28,1760,0.5,0.05,'square'],
-    // ─ Off-beat snare (square) ─
-    [2, 220,0.5,0.08,'square'], [6, 220,0.5,0.08,'square'],
-    [10,220,0.5,0.08,'square'], [14,220,0.5,0.08,'square'],
-    [18,220,0.5,0.08,'square'], [22,220,0.5,0.08,'square'],
-    [26,220,0.5,0.08,'square'], [30,220,0.5,0.08,'square'],
+  // じゃんけん専用BGM: A minor / 175bpm / 旋律+和声+ドラム で曲らしく
+  janken: _makeBgmSeq(60/175/2, 64, [
+    // ── 主旋律 (triangle, singable A minor melody) ──
+    [0, 659,4,0.17,'triangle'], [4, 587,2,0.14,'triangle'], [6, 523,2,0.14,'triangle'],
+    [8, 494,4,0.14,'triangle'], [12,440,4,0.16,'triangle'],
+    [16,523,2,0.14,'triangle'], [18,587,2,0.14,'triangle'],
+    [20,659,2,0.16,'triangle'], [22,784,2,0.16,'triangle'],
+    [24,698,4,0.17,'triangle'], [28,659,4,0.16,'triangle'],
+    [32,880,4,0.18,'triangle'], [36,784,2,0.17,'triangle'], [38,698,2,0.15,'triangle'],
+    [40,659,4,0.17,'triangle'], [44,587,4,0.15,'triangle'],
+    [48,523,2,0.15,'triangle'], [50,659,2,0.16,'triangle'],
+    [52,784,2,0.17,'triangle'], [54,880,2,0.18,'triangle'],
+    [56,784,4,0.17,'triangle'], [60,659,4,0.16,'triangle'],
+    // ── オクターブ下ダブル (sawtooth, 音に厚みを) ──
+    [0,330,4,0.07,'sawtooth'],  [4,294,2,0.06,'sawtooth'], [6,262,2,0.06,'sawtooth'],
+    [8,247,4,0.06,'sawtooth'],  [12,220,4,0.07,'sawtooth'],
+    [16,262,2,0.06,'sawtooth'], [18,294,2,0.06,'sawtooth'],
+    [20,330,2,0.07,'sawtooth'], [22,392,2,0.07,'sawtooth'],
+    [24,349,4,0.07,'sawtooth'], [28,330,4,0.07,'sawtooth'],
+    [32,440,4,0.08,'sawtooth'], [36,392,2,0.07,'sawtooth'], [38,349,2,0.07,'sawtooth'],
+    [40,330,4,0.07,'sawtooth'], [44,294,4,0.06,'sawtooth'],
+    [48,262,2,0.06,'sawtooth'], [50,330,2,0.07,'sawtooth'],
+    [52,392,2,0.07,'sawtooth'], [54,440,2,0.08,'sawtooth'],
+    [56,392,4,0.07,'sawtooth'], [60,330,4,0.07,'sawtooth'],
+    // ── 対旋律 (triangle, メロディの合間を埋める) ──
+    [2,440,2,0.07,'triangle'],  [6,392,2,0.07,'triangle'],
+    [10,392,2,0.07,'triangle'], [14,523,2,0.07,'triangle'],
+    [18,440,2,0.07,'triangle'], [22,523,2,0.07,'triangle'],
+    [26,523,2,0.07,'triangle'], [30,784,2,0.08,'triangle'],
+    [34,659,2,0.08,'triangle'], [38,880,2,0.09,'triangle'],
+    [42,784,2,0.08,'triangle'], [46,659,2,0.07,'triangle'],
+    [50,784,2,0.08,'triangle'], [54,1047,2,0.09,'triangle'],
+    [58,880,2,0.08,'triangle'], [62,784,2,0.07,'triangle'],
+    // ── ベース (sine, コード進行 Am-Am-F-C-Am) ──
+    [0,110,1,0.25,'sine'],[2,110,1,0.20,'sine'],[4,110,1,0.25,'sine'],[6,165,1,0.20,'sine'],
+    [8,110,1,0.25,'sine'],[10,131,1,0.20,'sine'],[12,110,1,0.25,'sine'],[14,82,1,0.22,'sine'],
+    [16,110,1,0.25,'sine'],[18,131,1,0.20,'sine'],[20,110,1,0.25,'sine'],[22,175,1,0.22,'sine'],
+    [24,131,1,0.25,'sine'],[26,131,1,0.20,'sine'],[28,196,1,0.25,'sine'],[30,196,1,0.20,'sine'],
+    [32,110,1,0.27,'sine'],[34,110,1,0.22,'sine'],[36,110,1,0.27,'sine'],[38,165,1,0.22,'sine'],
+    [40,110,1,0.27,'sine'],[42,131,1,0.22,'sine'],[44,110,1,0.27,'sine'],[46,82,1,0.24,'sine'],
+    [48,175,1,0.27,'sine'],[50,175,1,0.22,'sine'],[52,131,1,0.27,'sine'],[54,131,1,0.22,'sine'],
+    [56,196,1,0.27,'sine'],[58,165,1,0.24,'sine'],[60,110,1,0.27,'sine'],[62,82,1,0.24,'sine'],
+    // ── パワーコード (square) ──
+    [0,220,0.8,0.10,'square'],[0,330,0.8,0.07,'square'],
+    [4,220,0.8,0.10,'square'],[4,330,0.8,0.07,'square'],
+    [8,220,0.8,0.10,'square'],[8,330,0.8,0.07,'square'],
+    [12,220,0.8,0.10,'square'],[12,330,0.8,0.07,'square'],
+    [16,220,0.8,0.10,'square'],[16,330,0.8,0.07,'square'],
+    [20,175,0.8,0.10,'square'],[20,262,0.8,0.07,'square'],
+    [24,262,0.8,0.10,'square'],[24,392,0.8,0.07,'square'],
+    [28,196,0.8,0.10,'square'],[28,294,0.8,0.07,'square'],
+    [32,220,0.8,0.12,'square'],[32,330,0.8,0.08,'square'],
+    [36,220,0.8,0.12,'square'],[36,330,0.8,0.08,'square'],
+    [40,220,0.8,0.12,'square'],[40,330,0.8,0.08,'square'],
+    [44,220,0.8,0.12,'square'],[44,330,0.8,0.08,'square'],
+    [48,175,0.8,0.12,'square'],[48,262,0.8,0.08,'square'],
+    [52,262,0.8,0.12,'square'],[52,392,0.8,0.08,'square'],
+    [56,196,0.8,0.12,'square'],[56,294,0.8,0.08,'square'],
+    [60,220,0.8,0.12,'square'],[60,330,0.8,0.08,'square'],
+    // ── キック (低音 sine バースト, 拍1と3) ──
+    [0,55,0.5,0.28,'sine'],[4,55,0.5,0.25,'sine'],[8,55,0.5,0.28,'sine'],[12,55,0.5,0.25,'sine'],
+    [16,55,0.5,0.28,'sine'],[20,55,0.5,0.25,'sine'],[24,55,0.5,0.28,'sine'],[28,55,0.5,0.25,'sine'],
+    [32,55,0.5,0.30,'sine'],[36,55,0.5,0.27,'sine'],[40,55,0.5,0.30,'sine'],[44,55,0.5,0.27,'sine'],
+    [48,55,0.5,0.30,'sine'],[52,55,0.5,0.27,'sine'],[56,55,0.5,0.30,'sine'],[60,55,0.5,0.27,'sine'],
+    // ── スネア (square, 拍2と4) ──
+    [2,200,0.35,0.13,'square'],[6,200,0.35,0.13,'square'],
+    [10,200,0.35,0.13,'square'],[14,200,0.35,0.13,'square'],
+    [18,200,0.35,0.13,'square'],[22,200,0.35,0.13,'square'],
+    [26,200,0.35,0.13,'square'],[30,200,0.35,0.13,'square'],
+    [34,200,0.35,0.14,'square'],[38,200,0.35,0.14,'square'],
+    [42,200,0.35,0.14,'square'],[46,200,0.35,0.14,'square'],
+    [50,200,0.35,0.14,'square'],[54,200,0.35,0.14,'square'],
+    [58,200,0.35,0.14,'square'],[62,200,0.35,0.14,'square'],
+    // ── ハイハット (高音 square, オフビート) ──
+    [1,3000,0.2,0.035,'square'],[3,3000,0.2,0.035,'square'],[5,3000,0.2,0.035,'square'],[7,3000,0.2,0.035,'square'],
+    [9,3000,0.2,0.035,'square'],[11,3000,0.2,0.035,'square'],[13,3000,0.2,0.035,'square'],[15,3000,0.2,0.035,'square'],
+    [17,3000,0.2,0.035,'square'],[19,3000,0.2,0.035,'square'],[21,3000,0.2,0.035,'square'],[23,3000,0.2,0.035,'square'],
+    [25,3000,0.2,0.035,'square'],[27,3000,0.2,0.035,'square'],[29,3000,0.2,0.035,'square'],[31,3000,0.2,0.035,'square'],
+    [33,3000,0.2,0.04,'square'],[35,3000,0.2,0.04,'square'],[37,3000,0.2,0.04,'square'],[39,3000,0.2,0.04,'square'],
+    [41,3000,0.2,0.04,'square'],[43,3000,0.2,0.04,'square'],[45,3000,0.2,0.04,'square'],[47,3000,0.2,0.04,'square'],
+    [49,3000,0.2,0.04,'square'],[51,3000,0.2,0.04,'square'],[53,3000,0.2,0.04,'square'],[55,3000,0.2,0.04,'square'],
+    [57,3000,0.2,0.04,'square'],[59,3000,0.2,0.04,'square'],[61,3000,0.2,0.04,'square'],[63,3000,0.2,0.04,'square'],
   ]),
 
   battle: _makeBgmSeq(60/155/2, 24, [
@@ -2598,14 +2646,36 @@ function _jkDraw() {
   JK.animT++;
   const t = JK.animT;
 
+  // ─ キャラクター移動アニメ ─
+  const p1w = $('jk-p1-char-wrap');
+  const p2w = $('jk-p2-char-wrap');
+  if (JK.animState === 'beam_p1') {
+    const lunge  = Math.max(0, Math.sin(Math.min(t / 18, 1) * Math.PI)) * 32;
+    const recoil = t > 28 ? Math.max(0, Math.sin(Math.min((t - 28) / 18, 1) * Math.PI)) * 22 : 0;
+    p1w.style.transform = `translateX(${lunge}px)`;
+    p2w.style.transform = `translateX(${recoil}px)`;
+  } else if (JK.animState === 'beam_p2') {
+    const lunge  = Math.max(0, Math.sin(Math.min(t / 18, 1) * Math.PI)) * 32;
+    const recoil = t > 28 ? Math.max(0, Math.sin(Math.min((t - 28) / 18, 1) * Math.PI)) * 22 : 0;
+    p2w.style.transform = `translateX(${-lunge}px)`;
+    p1w.style.transform = `translateX(${-recoil}px)`;
+  } else if (JK.animState === 'clash') {
+    const lunge = Math.max(0, Math.sin(Math.min(t / 20, 1) * Math.PI)) * 26;
+    p1w.style.transform = `translateX(${lunge}px)`;
+    p2w.style.transform = `translateX(${-lunge}px)`;
+  } else {
+    p1w.style.transform = '';
+    p2w.style.transform = '';
+  }
+
   if (JK.animState === 'beam_p1' || JK.animState === 'beam_p2') {
     _jkDrawBeam(ctx, W, H, JK.animState === 'beam_p1');
     if (t === 28) _jkShake();
-    if (t > 70) { JK.animState = 'idle'; _jkAfterAnim(); }
+    if (t > 70) { JK.animState = 'idle'; p1w.style.transform = ''; p2w.style.transform = ''; _jkAfterAnim(); }
   } else if (JK.animState === 'clash') {
     _jkDrawClash(ctx, W, H);
     if (t === 28) _jkShake();
-    if (t > 80) { JK.animState = 'idle'; _jkAfterAnim(); }
+    if (t > 80) { JK.animState = 'idle'; p1w.style.transform = ''; p2w.style.transform = ''; _jkAfterAnim(); }
   }
 
   JK.particles = JK.particles.filter(p => p.life > 0);
@@ -2622,34 +2692,40 @@ function _jkDraw() {
 
 function _jkDrawBeam(ctx, W, H, fromLeft) {
   const t = JK.animT;
-  // キャラの胸あたりを狙う Y 座標（実測で画像上部40%がH*0.83付近）
   const y = H * 0.83;
   const p1h = HEROES[JK.p1HeroId];
   const col = fromLeft
     ? p1h.col
     : (JK.p2IsEnemy ? JK.boss.color : HEROES[JK.p2HeroId].col);
+  const hand = fromLeft ? JK.p1Hand : JK.p2Hand;
 
-  // 左キャラ中心 = フィールド幅の15%、右キャラ中心 = 85%
   const x1 = fromLeft ? W * 0.18 : W * 0.82;
   const x2 = fromLeft ? W * 0.82 : W * 0.18;
   const prog = Math.min(t / 25, 1);
   const xEnd = x1 + (x2 - x1) * prog;
 
+  if (hand === 'scissors') {
+    _jkBeamSlash(ctx, col, x1, x2, y, H, prog, t);
+  } else if (hand === 'paper') {
+    _jkBeamSpread(ctx, col, x1, x2, y, H, prog, t);
+  } else {
+    _jkBeamPower(ctx, col, x1, xEnd, x2, y, prog, t);
+  }
+}
+
+// グー: 太い一直線パワービーム
+function _jkBeamPower(ctx, col, x1, xEnd, x2, y, prog, t) {
   ctx.save();
   ctx.shadowColor = col; ctx.shadowBlur = 36;
-  // 外側グロー
   const g = ctx.createLinearGradient(x1, y, xEnd, y);
   g.addColorStop(0, col + 'ff'); g.addColorStop(0.8, col + 'cc'); g.addColorStop(1, '#ffffffff');
   ctx.strokeStyle = g; ctx.lineWidth = 22; ctx.lineCap = 'round';
   ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, y); ctx.stroke();
-  // 中間グロー
   ctx.strokeStyle = col + 'aa'; ctx.lineWidth = 14;
   ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, y); ctx.stroke();
-  // 白芯
   ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 7;
   ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, y); ctx.stroke();
   ctx.restore();
-
   if (prog >= 1 && Math.random() < 0.5) {
     _jkParticle(x2, y, col, 4, 5, 12);
     _jkParticle(x2, y, '#ffffff', 3, 6, 10);
@@ -2660,10 +2736,73 @@ function _jkDrawBeam(ctx, W, H, fromLeft) {
       ctx.save();
       const eg = ctx.createRadialGradient(x2, y, 0, x2, y, boom);
       eg.addColorStop(0, '#ffffff'); eg.addColorStop(0.5, col + '99'); eg.addColorStop(1, 'transparent');
-      ctx.fillStyle = eg;
-      ctx.beginPath(); ctx.arc(x2, y, boom, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(x2, y, boom, 0, Math.PI*2); ctx.fill();
       ctx.restore();
     }
+  }
+}
+
+// チョキ: 3本の斜めスラッシュビーム
+function _jkBeamSlash(ctx, col, x1, x2, y, H, prog, t) {
+  const offsets = [-H * 0.055, 0, H * 0.055];
+  for (let i = 0; i < 3; i++) {
+    const sp = Math.min(Math.max(0, t - i * 5) / 22, 1);
+    if (sp <= 0) continue;
+    const yEnd = y + offsets[i] * sp;
+    const xEnd = x1 + (x2 - x1) * sp;
+    ctx.save();
+    ctx.shadowColor = col; ctx.shadowBlur = 22;
+    const g = ctx.createLinearGradient(x1, y, xEnd, yEnd);
+    g.addColorStop(0, col + 'ff'); g.addColorStop(0.85, col + 'cc'); g.addColorStop(1, '#ffffffff');
+    ctx.strokeStyle = g; ctx.lineWidth = 14; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, yEnd); ctx.stroke();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, yEnd); ctx.stroke();
+    ctx.restore();
+  }
+  if (prog >= 1) {
+    const boom = Math.max(0, Math.sin((t - 22) / 18 * Math.PI)) * 32;
+    if (boom > 0) {
+      offsets.forEach(ya => { if (Math.random() < 0.4) _jkParticle(x2, y + ya, col, 3, 5, 10); });
+      ctx.save();
+      const eg = ctx.createRadialGradient(x2, y, 0, x2, y, boom);
+      eg.addColorStop(0, '#ffffff'); eg.addColorStop(0.5, col + '88'); eg.addColorStop(1, 'transparent');
+      ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(x2, y, boom, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+  }
+}
+
+// パー: 扇形に広がる3本ビーム
+function _jkBeamSpread(ctx, col, x1, x2, y, H, prog, t) {
+  const targets = [-H * 0.07, 0, H * 0.07];
+  for (let i = 0; i < 3; i++) {
+    const sp = Math.min(Math.max(0, t - i * 4) / 24, 1);
+    if (sp <= 0) continue;
+    const yEnd = y + targets[i] * sp;
+    const xEnd = x1 + (x2 - x1) * sp;
+    ctx.save();
+    ctx.shadowColor = col; ctx.shadowBlur = 20;
+    const g = ctx.createLinearGradient(x1, y, xEnd, yEnd);
+    g.addColorStop(0, col + 'ff'); g.addColorStop(0.85, col + 'cc'); g.addColorStop(1, '#ffffffff');
+    ctx.strokeStyle = g; ctx.lineWidth = 16; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, yEnd); ctx.stroke();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, yEnd); ctx.stroke();
+    ctx.restore();
+  }
+  if (prog >= 1) {
+    targets.forEach(ya => {
+      const boom = Math.max(0, Math.sin((t - 25) / 18 * Math.PI)) * 26;
+      if (boom > 0) {
+        if (Math.random() < 0.4) _jkParticle(x2, y + ya, col, 3, 4, 10);
+        ctx.save();
+        const eg = ctx.createRadialGradient(x2, y + ya, 0, x2, y + ya, boom);
+        eg.addColorStop(0, '#ffffff'); eg.addColorStop(0.5, col + '88'); eg.addColorStop(1, 'transparent');
+        ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(x2, y + ya, boom, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+      }
+    });
   }
 }
 
@@ -2674,24 +2813,61 @@ function _jkDrawClash(ctx, W, H) {
   const p1col = HEROES[JK.p1HeroId].col;
   const p2col = JK.p2IsEnemy ? JK.boss.color : HEROES[JK.p2HeroId].col;
   const prog = Math.min(t / 25, 1);
+  const hand = JK.p1Hand;
 
-  const drawSide = (x1, col) => {
-    const xEnd = x1 + (cx - x1) * prog;
-    ctx.save();
-    ctx.shadowColor = col; ctx.shadowBlur = 36;
-    const g = ctx.createLinearGradient(x1, y, xEnd, y);
-    g.addColorStop(0, col + 'ff'); g.addColorStop(1, '#ffffff');
-    ctx.strokeStyle = g; ctx.lineWidth = 22; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, y); ctx.stroke();
-    ctx.strokeStyle = col + 'aa'; ctx.lineWidth = 14;
-    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, y); ctx.stroke();
-    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 7;
-    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, y); ctx.stroke();
-    ctx.restore();
-  };
-  // 両ビームをキャラ中心位置から中央に向かわせる
-  drawSide(W * 0.18, p1col);
-  drawSide(W * 0.82, p2col);
+  if (hand === 'scissors') {
+    // クロスするスラッシュ
+    [-H*0.055, 0, H*0.055].forEach((ya, i) => {
+      const sp = Math.min(Math.max(0, t - i*4) / 22, 1);
+      if (sp <= 0) return;
+      [[W*0.18, p1col, ya], [W*0.82, p2col, -ya]].forEach(([sx, sc, dy]) => {
+        const xe = sx + (cx - sx) * sp, ye = y + dy * sp;
+        ctx.save();
+        ctx.shadowColor = sc; ctx.shadowBlur = 20;
+        const g = ctx.createLinearGradient(sx, y, xe, ye);
+        g.addColorStop(0, sc+'ff'); g.addColorStop(1, '#ffffff');
+        ctx.strokeStyle = g; ctx.lineWidth = 12; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(sx, y); ctx.lineTo(xe, ye); ctx.stroke();
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(sx, y); ctx.lineTo(xe, ye); ctx.stroke();
+        ctx.restore();
+      });
+    });
+  } else if (hand === 'paper') {
+    // 両サイドから扇形
+    [-H*0.07, 0, H*0.07].forEach((ya, i) => {
+      const sp = Math.min(Math.max(0, t - i*4) / 24, 1);
+      if (sp <= 0) return;
+      [[W*0.18, p1col, ya], [W*0.82, p2col, ya]].forEach(([sx, sc]) => {
+        const xe = sx + (cx - sx) * sp, ye = y + ya * sp;
+        ctx.save();
+        ctx.shadowColor = sc; ctx.shadowBlur = 18;
+        const g = ctx.createLinearGradient(sx, y, xe, ye);
+        g.addColorStop(0, sc+'ff'); g.addColorStop(1, '#ffffff');
+        ctx.strokeStyle = g; ctx.lineWidth = 14; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(sx, y); ctx.lineTo(xe, ye); ctx.stroke();
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.moveTo(sx, y); ctx.lineTo(xe, ye); ctx.stroke();
+        ctx.restore();
+      });
+    });
+  } else {
+    // グー: 両側からパワービーム
+    [[W*0.18, p1col], [W*0.82, p2col]].forEach(([sx, sc]) => {
+      const xe = sx + (cx - sx) * prog;
+      ctx.save();
+      ctx.shadowColor = sc; ctx.shadowBlur = 36;
+      const g = ctx.createLinearGradient(sx, y, xe, y);
+      g.addColorStop(0, sc+'ff'); g.addColorStop(1, '#ffffff');
+      ctx.strokeStyle = g; ctx.lineWidth = 22; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(sx, y); ctx.lineTo(xe, y); ctx.stroke();
+      ctx.strokeStyle = sc+'aa'; ctx.lineWidth = 14;
+      ctx.beginPath(); ctx.moveTo(sx, y); ctx.lineTo(xe, y); ctx.stroke();
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 7;
+      ctx.beginPath(); ctx.moveTo(sx, y); ctx.lineTo(xe, y); ctx.stroke();
+      ctx.restore();
+    });
+  }
 
   if (prog >= 1) {
     const boomT = (t - 25) / 30;
@@ -2782,6 +2958,10 @@ function _jkReveal() {
   JK.phase = 'reveal';
   $('jk-p1-chosen').textContent = JK_EMOJI[JK.p1Hand] + ' ' + JK_NAME[JK.p1Hand];
   $('jk-p2-chosen').textContent = JK_EMOJI[JK.p2Hand] + ' ' + JK_NAME[JK.p2Hand];
+  // キャラクター上に手を表示
+  const b1 = $('jk-p1-hand-badge'), b2 = $('jk-p2-hand-badge');
+  if (b1) { b1.innerHTML = JK_EMOJI[JK.p1Hand] + '<br><span>' + JK_NAME[JK.p1Hand] + '</span>'; b1.classList.add('visible'); }
+  if (b2) { b2.innerHTML = JK_EMOJI[JK.p2Hand] + '<br><span>' + JK_NAME[JK.p2Hand] + '</span>'; b2.classList.add('visible'); }
 
   JK.roundResult = jkWho(JK.p1Hand, JK.p2Hand);
   JK.animT = 0;
@@ -2862,6 +3042,9 @@ function _jkResetHands() {
   JK.phase = 'select';
   $('jk-p1-chosen').textContent = '？';
   $('jk-p2-chosen').textContent = '？';
+  const b1 = $('jk-p1-hand-badge'), b2 = $('jk-p2-hand-badge');
+  if (b1) b1.classList.remove('visible');
+  if (b2) b2.classList.remove('visible');
   document.querySelectorAll('.jk-hand').forEach(b => {
     b.disabled = false; b.classList.remove('selected');
   });
