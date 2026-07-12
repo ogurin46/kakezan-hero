@@ -54,8 +54,8 @@ const DIFFS = [
 ];
 // 難易度ステージ専用の敵（img/enemy_easy.png など）
 const DIFF_ENEMIES = [
-  { name:'ピグモン',     img:'enemy_easy',   mult:3, maxHp:6,  color:'#ef4444', emoji:'🔴', atk:'rush',       dmg:1, imgScale:0.90 },
-  { name:'バルタン星人', img:'enemy_hard',   mult:6, maxHp:9,  color:'#94a3b8', emoji:'✂️', atk:'projectile', dmg:2, imgScale:0.80 },
+  { name:'バルタン星人', img:'enemy_easy',   mult:3, maxHp:6,  color:'#ef4444', emoji:'✂️', atk:'rush',       dmg:1, imgScale:0.90 },
+  { name:'ベリアル',     img:'enemy_hard',   mult:6, maxHp:9,  color:'#94a3b8', emoji:'😈', atk:'projectile', dmg:2, imgScale:0.80 },
   { name:'ベリアル',     img:'enemy_beryal', mult:9, maxHp:13, color:'#b91c1c', emoji:'😈', atk:'magic',      dmg:3, imgScale:0.90 },
 ];
 const isDiffStage = stage => stage >= 9;
@@ -306,15 +306,15 @@ function updateXpBar() {
 
 // ─── 敵データ ───
 const ENEMIES = [
-  { name:'スライムキング', img:'enemy_2', mult:1, maxHp:5, color:'#4ade80', emoji:'🟢', atk:'rush',       dmg:1 },
-  { name:'バットマン',   img:'enemy_3', mult:2, maxHp:6,  color:'#a78bfa', emoji:'🦇', atk:'projectile', dmg:1 },
-  { name:'クモッチ',     img:'enemy_4', mult:3, maxHp:7,  color:'#d97706', emoji:'🕷️', atk:'rush',       dmg:1 },
-  { name:'ドクロン',     img:'enemy_5', mult:4, maxHp:8,  color:'#e2e8f0', emoji:'💀', atk:'projectile', dmg:2 },
-  { name:'ドラゴニア',   img:'enemy_6', mult:5, maxHp:9,  color:'#f87171', emoji:'🐲', atk:'projectile', dmg:2 },
-  { name:'サイバーゴン', img:'enemy_7', mult:6, maxHp:10, color:'#38bdf8', emoji:'🤖', atk:'projectile', dmg:2 },
-  { name:'ダークマジン', img:'enemy_8', mult:7, maxHp:12, color:'#c084fc', emoji:'🧙', atk:'magic',      dmg:2 },
-  { name:'ゴーレマン',   img:'enemy_9', mult:8, maxHp:14, color:'#a8a29e', emoji:'🗿', atk:'rush',       dmg:3 },
-  { name:'魔王ザグロス', img:'enemy_normal', mult:9, maxHp:18, color:'#ff4500', emoji:'👹', atk:'magic', dmg:3, imgScale:0.80 },
+  { name:'バットマン',   img:'enemy_2', mult:1, maxHp:5, color:'#4ade80', emoji:'🦇', atk:'rush',       dmg:1 },
+  { name:'クモッチ',     img:'enemy_3', mult:2, maxHp:6,  color:'#a78bfa', emoji:'🕷️', atk:'projectile', dmg:1 },
+  { name:'ドクロン',     img:'enemy_4', mult:3, maxHp:7,  color:'#d97706', emoji:'💀', atk:'rush',       dmg:1 },
+  { name:'ドラゴニア',   img:'enemy_5', mult:4, maxHp:8,  color:'#e2e8f0', emoji:'🐲', atk:'projectile', dmg:2 },
+  { name:'サイバーゴン', img:'enemy_6', mult:5, maxHp:9,  color:'#f87171', emoji:'🤖', atk:'projectile', dmg:2 },
+  { name:'ダークマジン', img:'enemy_7', mult:6, maxHp:10, color:'#38bdf8', emoji:'🧙', atk:'projectile', dmg:2 },
+  { name:'ゴーレマン',   img:'enemy_8', mult:7, maxHp:12, color:'#c084fc', emoji:'🗿', atk:'magic',      dmg:2 },
+  { name:'魔王ザグロス', img:'enemy_9', mult:8, maxHp:14, color:'#a8a29e', emoji:'👹', atk:'rush',       dmg:3 },
+  { name:'ダダ',         img:'enemy_normal', mult:9, maxHp:18, color:'#ff4500', emoji:'👾', atk:'magic', dmg:3, imgScale:0.80 },
 ];
 
 // ─── ゲーム状態 ───
