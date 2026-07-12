@@ -2636,21 +2636,26 @@ function _jkDrawBeam(ctx, W, H, fromLeft) {
   const xEnd = x1 + (x2 - x1) * prog;
 
   ctx.save();
-  ctx.shadowColor = col; ctx.shadowBlur = 24;
+  ctx.shadowColor = col; ctx.shadowBlur = 36;
+  // 外側グロー
   const g = ctx.createLinearGradient(x1, y, xEnd, y);
-  g.addColorStop(0, col + 'ff'); g.addColorStop(0.8, col + 'aa'); g.addColorStop(1, '#ffffffff');
-  ctx.strokeStyle = g; ctx.lineWidth = 10; ctx.lineCap = 'round';
+  g.addColorStop(0, col + 'ff'); g.addColorStop(0.8, col + 'cc'); g.addColorStop(1, '#ffffffff');
+  ctx.strokeStyle = g; ctx.lineWidth = 22; ctx.lineCap = 'round';
   ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, y); ctx.stroke();
-  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3;
+  // 中間グロー
+  ctx.strokeStyle = col + 'aa'; ctx.lineWidth = 14;
+  ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, y); ctx.stroke();
+  // 白芯
+  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 7;
   ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, y); ctx.stroke();
   ctx.restore();
 
   if (prog >= 1 && Math.random() < 0.5) {
-    _jkParticle(x2, y, col, 3, 4, 10);
-    _jkParticle(x2, y, '#ffffff', 2, 5, 8);
+    _jkParticle(x2, y, col, 4, 5, 12);
+    _jkParticle(x2, y, '#ffffff', 3, 6, 10);
   }
   if (prog >= 1) {
-    const boom = Math.max(0, Math.sin((t - 25) / 20 * Math.PI)) * 28;
+    const boom = Math.max(0, Math.sin((t - 25) / 20 * Math.PI)) * 38;
     if (boom > 0) {
       ctx.save();
       const eg = ctx.createRadialGradient(x2, y, 0, x2, y, boom);
@@ -2673,12 +2678,14 @@ function _jkDrawClash(ctx, W, H) {
   const drawSide = (x1, col) => {
     const xEnd = x1 + (cx - x1) * prog;
     ctx.save();
-    ctx.shadowColor = col; ctx.shadowBlur = 20;
+    ctx.shadowColor = col; ctx.shadowBlur = 36;
     const g = ctx.createLinearGradient(x1, y, xEnd, y);
     g.addColorStop(0, col + 'ff'); g.addColorStop(1, '#ffffff');
-    ctx.strokeStyle = g; ctx.lineWidth = 10; ctx.lineCap = 'round';
+    ctx.strokeStyle = g; ctx.lineWidth = 22; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, y); ctx.stroke();
-    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3;
+    ctx.strokeStyle = col + 'aa'; ctx.lineWidth = 14;
+    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, y); ctx.stroke();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 7;
     ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, y); ctx.stroke();
     ctx.restore();
   };
@@ -2688,7 +2695,7 @@ function _jkDrawClash(ctx, W, H) {
 
   if (prog >= 1) {
     const boomT = (t - 25) / 30;
-    const boom = Math.max(0, Math.sin(Math.min(boomT, 1) * Math.PI)) * 44;
+    const boom = Math.max(0, Math.sin(Math.min(boomT, 1) * Math.PI)) * 70;
     if (boom > 0) {
       ctx.save();
       ctx.shadowColor = '#fff'; ctx.shadowBlur = 40;
