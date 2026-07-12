@@ -1793,88 +1793,172 @@ const BGM_SEQS = {
     [16, 932,2,0.06,'triangle'], [24, 659,2,0.05,'triangle'],
   ]),
 
-  // じゃんけん専用BGM: A minor / 175bpm / 旋律+和声+ドラム で曲らしく
-  janken: _makeBgmSeq(60/175/2, 64, [
-    // ── 主旋律 (triangle, singable A minor melody) ──
-    [0, 659,4,0.17,'triangle'], [4, 587,2,0.14,'triangle'], [6, 523,2,0.14,'triangle'],
-    [8, 494,4,0.14,'triangle'], [12,440,4,0.16,'triangle'],
-    [16,523,2,0.14,'triangle'], [18,587,2,0.14,'triangle'],
-    [20,659,2,0.16,'triangle'], [22,784,2,0.16,'triangle'],
-    [24,698,4,0.17,'triangle'], [28,659,4,0.16,'triangle'],
-    [32,880,4,0.18,'triangle'], [36,784,2,0.17,'triangle'], [38,698,2,0.15,'triangle'],
-    [40,659,4,0.17,'triangle'], [44,587,4,0.15,'triangle'],
-    [48,523,2,0.15,'triangle'], [50,659,2,0.16,'triangle'],
-    [52,784,2,0.17,'triangle'], [54,880,2,0.18,'triangle'],
-    [56,784,4,0.17,'triangle'], [60,659,4,0.16,'triangle'],
-    // ── オクターブ下ダブル (sawtooth, 音に厚みを) ──
-    [0,330,4,0.07,'sawtooth'],  [4,294,2,0.06,'sawtooth'], [6,262,2,0.06,'sawtooth'],
-    [8,247,4,0.06,'sawtooth'],  [12,220,4,0.07,'sawtooth'],
-    [16,262,2,0.06,'sawtooth'], [18,294,2,0.06,'sawtooth'],
-    [20,330,2,0.07,'sawtooth'], [22,392,2,0.07,'sawtooth'],
-    [24,349,4,0.07,'sawtooth'], [28,330,4,0.07,'sawtooth'],
-    [32,440,4,0.08,'sawtooth'], [36,392,2,0.07,'sawtooth'], [38,349,2,0.07,'sawtooth'],
-    [40,330,4,0.07,'sawtooth'], [44,294,4,0.06,'sawtooth'],
-    [48,262,2,0.06,'sawtooth'], [50,330,2,0.07,'sawtooth'],
-    [52,392,2,0.07,'sawtooth'], [54,440,2,0.08,'sawtooth'],
-    [56,392,4,0.07,'sawtooth'], [60,330,4,0.07,'sawtooth'],
-    // ── 対旋律 (triangle, メロディの合間を埋める) ──
-    [2,440,2,0.07,'triangle'],  [6,392,2,0.07,'triangle'],
-    [10,392,2,0.07,'triangle'], [14,523,2,0.07,'triangle'],
-    [18,440,2,0.07,'triangle'], [22,523,2,0.07,'triangle'],
-    [26,523,2,0.07,'triangle'], [30,784,2,0.08,'triangle'],
-    [34,659,2,0.08,'triangle'], [38,880,2,0.09,'triangle'],
-    [42,784,2,0.08,'triangle'], [46,659,2,0.07,'triangle'],
-    [50,784,2,0.08,'triangle'], [54,1047,2,0.09,'triangle'],
-    [58,880,2,0.08,'triangle'], [62,784,2,0.07,'triangle'],
-    // ── ベース (sine, コード進行 Am-Am-F-C-Am) ──
-    [0,110,1,0.25,'sine'],[2,110,1,0.20,'sine'],[4,110,1,0.25,'sine'],[6,165,1,0.20,'sine'],
-    [8,110,1,0.25,'sine'],[10,131,1,0.20,'sine'],[12,110,1,0.25,'sine'],[14,82,1,0.22,'sine'],
-    [16,110,1,0.25,'sine'],[18,131,1,0.20,'sine'],[20,110,1,0.25,'sine'],[22,175,1,0.22,'sine'],
-    [24,131,1,0.25,'sine'],[26,131,1,0.20,'sine'],[28,196,1,0.25,'sine'],[30,196,1,0.20,'sine'],
-    [32,110,1,0.27,'sine'],[34,110,1,0.22,'sine'],[36,110,1,0.27,'sine'],[38,165,1,0.22,'sine'],
-    [40,110,1,0.27,'sine'],[42,131,1,0.22,'sine'],[44,110,1,0.27,'sine'],[46,82,1,0.24,'sine'],
-    [48,175,1,0.27,'sine'],[50,175,1,0.22,'sine'],[52,131,1,0.27,'sine'],[54,131,1,0.22,'sine'],
-    [56,196,1,0.27,'sine'],[58,165,1,0.24,'sine'],[60,110,1,0.27,'sine'],[62,82,1,0.24,'sine'],
-    // ── パワーコード (square) ──
-    [0,220,0.8,0.10,'square'],[0,330,0.8,0.07,'square'],
-    [4,220,0.8,0.10,'square'],[4,330,0.8,0.07,'square'],
-    [8,220,0.8,0.10,'square'],[8,330,0.8,0.07,'square'],
-    [12,220,0.8,0.10,'square'],[12,330,0.8,0.07,'square'],
-    [16,220,0.8,0.10,'square'],[16,330,0.8,0.07,'square'],
-    [20,175,0.8,0.10,'square'],[20,262,0.8,0.07,'square'],
-    [24,262,0.8,0.10,'square'],[24,392,0.8,0.07,'square'],
-    [28,196,0.8,0.10,'square'],[28,294,0.8,0.07,'square'],
-    [32,220,0.8,0.12,'square'],[32,330,0.8,0.08,'square'],
-    [36,220,0.8,0.12,'square'],[36,330,0.8,0.08,'square'],
-    [40,220,0.8,0.12,'square'],[40,330,0.8,0.08,'square'],
-    [44,220,0.8,0.12,'square'],[44,330,0.8,0.08,'square'],
-    [48,175,0.8,0.12,'square'],[48,262,0.8,0.08,'square'],
-    [52,262,0.8,0.12,'square'],[52,392,0.8,0.08,'square'],
-    [56,196,0.8,0.12,'square'],[56,294,0.8,0.08,'square'],
-    [60,220,0.8,0.12,'square'],[60,330,0.8,0.08,'square'],
-    // ── キック (低音 sine バースト, 拍1と3) ──
-    [0,55,0.5,0.28,'sine'],[4,55,0.5,0.25,'sine'],[8,55,0.5,0.28,'sine'],[12,55,0.5,0.25,'sine'],
-    [16,55,0.5,0.28,'sine'],[20,55,0.5,0.25,'sine'],[24,55,0.5,0.28,'sine'],[28,55,0.5,0.25,'sine'],
-    [32,55,0.5,0.30,'sine'],[36,55,0.5,0.27,'sine'],[40,55,0.5,0.30,'sine'],[44,55,0.5,0.27,'sine'],
-    [48,55,0.5,0.30,'sine'],[52,55,0.5,0.27,'sine'],[56,55,0.5,0.30,'sine'],[60,55,0.5,0.27,'sine'],
-    // ── スネア (square, 拍2と4) ──
-    [2,200,0.35,0.13,'square'],[6,200,0.35,0.13,'square'],
-    [10,200,0.35,0.13,'square'],[14,200,0.35,0.13,'square'],
-    [18,200,0.35,0.13,'square'],[22,200,0.35,0.13,'square'],
-    [26,200,0.35,0.13,'square'],[30,200,0.35,0.13,'square'],
-    [34,200,0.35,0.14,'square'],[38,200,0.35,0.14,'square'],
-    [42,200,0.35,0.14,'square'],[46,200,0.35,0.14,'square'],
-    [50,200,0.35,0.14,'square'],[54,200,0.35,0.14,'square'],
-    [58,200,0.35,0.14,'square'],[62,200,0.35,0.14,'square'],
-    // ── ハイハット (高音 square, オフビート) ──
-    [1,3000,0.2,0.035,'square'],[3,3000,0.2,0.035,'square'],[5,3000,0.2,0.035,'square'],[7,3000,0.2,0.035,'square'],
-    [9,3000,0.2,0.035,'square'],[11,3000,0.2,0.035,'square'],[13,3000,0.2,0.035,'square'],[15,3000,0.2,0.035,'square'],
-    [17,3000,0.2,0.035,'square'],[19,3000,0.2,0.035,'square'],[21,3000,0.2,0.035,'square'],[23,3000,0.2,0.035,'square'],
-    [25,3000,0.2,0.035,'square'],[27,3000,0.2,0.035,'square'],[29,3000,0.2,0.035,'square'],[31,3000,0.2,0.035,'square'],
-    [33,3000,0.2,0.04,'square'],[35,3000,0.2,0.04,'square'],[37,3000,0.2,0.04,'square'],[39,3000,0.2,0.04,'square'],
-    [41,3000,0.2,0.04,'square'],[43,3000,0.2,0.04,'square'],[45,3000,0.2,0.04,'square'],[47,3000,0.2,0.04,'square'],
-    [49,3000,0.2,0.04,'square'],[51,3000,0.2,0.04,'square'],[53,3000,0.2,0.04,'square'],[55,3000,0.2,0.04,'square'],
-    [57,3000,0.2,0.04,'square'],[59,3000,0.2,0.04,'square'],[61,3000,0.2,0.04,'square'],[63,3000,0.2,0.04,'square'],
+  // じゃんけん専用BGM: A minor / 190bpm / リズミカル爽快・スタッカートメロディ
+  janken: _makeBgmSeq(60/190/2, 64, [
+    // ── 主旋律 (triangle, 短音符スタッカートで疾走感) ──
+    // Phrase A: 上昇ライン
+    [0,659,1,0.19,'triangle'],[1,523,1,0.16,'triangle'],
+    [2,659,1,0.19,'triangle'],[3,784,1,0.19,'triangle'],
+    [4,659,1,0.18,'triangle'],[5,523,1,0.16,'triangle'],
+    [6,440,2,0.18,'triangle'],
+    [8,523,1,0.18,'triangle'],[9,659,1,0.19,'triangle'],
+    [10,784,1,0.20,'triangle'],[11,880,1,0.21,'triangle'],
+    [12,784,2,0.21,'triangle'],[14,659,2,0.18,'triangle'],
+    // Phrase B: 高音域展開
+    [16,440,1,0.18,'triangle'],[17,523,1,0.19,'triangle'],
+    [18,659,1,0.20,'triangle'],[19,784,1,0.20,'triangle'],
+    [20,880,2,0.22,'triangle'],
+    [22,784,1,0.19,'triangle'],[23,698,1,0.18,'triangle'],
+    [24,659,2,0.19,'triangle'],[26,523,2,0.17,'triangle'],
+    [28,440,4,0.18,'triangle'],
+    // Phrase C: クライマックス
+    [32,880,1,0.22,'triangle'],[33,784,1,0.20,'triangle'],
+    [34,880,1,0.22,'triangle'],[35,784,1,0.20,'triangle'],
+    [36,659,1,0.20,'triangle'],[37,523,1,0.18,'triangle'],
+    [38,659,2,0.20,'triangle'],
+    [40,784,1,0.21,'triangle'],[41,659,1,0.19,'triangle'],
+    [42,523,1,0.18,'triangle'],[43,440,1,0.18,'triangle'],
+    [44,523,2,0.19,'triangle'],[46,659,2,0.19,'triangle'],
+    // Phrase D: 着地
+    [48,659,1,0.19,'triangle'],[49,523,1,0.17,'triangle'],
+    [50,440,1,0.17,'triangle'],[51,523,1,0.18,'triangle'],
+    [52,659,1,0.19,'triangle'],[53,784,1,0.20,'triangle'],
+    [54,880,2,0.22,'triangle'],
+    [56,784,2,0.19,'triangle'],[58,659,2,0.18,'triangle'],
+    [60,523,2,0.17,'triangle'],[62,440,2,0.18,'triangle'],
+    // ── オクターブダブル (sawtooth, 音の厚み) ──
+    [0,330,1,0.07,'sawtooth'],[1,262,1,0.06,'sawtooth'],
+    [2,330,1,0.07,'sawtooth'],[3,392,1,0.07,'sawtooth'],
+    [4,330,1,0.07,'sawtooth'],[5,262,1,0.06,'sawtooth'],
+    [6,220,2,0.07,'sawtooth'],
+    [8,262,1,0.06,'sawtooth'],[9,330,1,0.07,'sawtooth'],
+    [10,392,1,0.07,'sawtooth'],[11,440,1,0.08,'sawtooth'],
+    [12,392,2,0.08,'sawtooth'],[14,330,2,0.07,'sawtooth'],
+    [16,220,1,0.07,'sawtooth'],[17,262,1,0.07,'sawtooth'],
+    [18,330,1,0.07,'sawtooth'],[19,392,1,0.07,'sawtooth'],
+    [20,440,2,0.08,'sawtooth'],
+    [22,392,1,0.07,'sawtooth'],[23,349,1,0.07,'sawtooth'],
+    [24,330,2,0.07,'sawtooth'],[26,262,2,0.06,'sawtooth'],
+    [28,220,4,0.07,'sawtooth'],
+    [32,440,1,0.09,'sawtooth'],[33,392,1,0.08,'sawtooth'],
+    [34,440,1,0.09,'sawtooth'],[35,392,1,0.08,'sawtooth'],
+    [36,330,1,0.07,'sawtooth'],[37,262,1,0.06,'sawtooth'],
+    [38,330,2,0.07,'sawtooth'],
+    [40,392,1,0.08,'sawtooth'],[41,330,1,0.07,'sawtooth'],
+    [42,262,1,0.06,'sawtooth'],[43,220,1,0.07,'sawtooth'],
+    [44,262,2,0.07,'sawtooth'],[46,330,2,0.07,'sawtooth'],
+    [48,330,1,0.07,'sawtooth'],[49,262,1,0.06,'sawtooth'],
+    [50,220,1,0.07,'sawtooth'],[51,262,1,0.07,'sawtooth'],
+    [52,330,1,0.07,'sawtooth'],[53,392,1,0.08,'sawtooth'],
+    [54,440,2,0.09,'sawtooth'],
+    [56,392,2,0.08,'sawtooth'],[58,330,2,0.07,'sawtooth'],
+    [60,262,2,0.06,'sawtooth'],[62,220,2,0.07,'sawtooth'],
+    // ── 合いの手フレーズ (triangle, ポップなカウンター) ──
+    [7,784,1,0.08,'triangle'],[15,659,1,0.07,'triangle'],
+    [23,523,1,0.07,'triangle'],[31,880,1,0.09,'triangle'],
+    [39,784,1,0.08,'triangle'],[47,659,1,0.07,'triangle'],
+    [55,523,1,0.07,'triangle'],[63,1047,1,0.09,'triangle'],
+    // ── ベース (sine, シンコペーション) ──
+    [0,110,0.8,0.28,'sine'],[1,110,0.4,0.18,'sine'],
+    [2,165,0.8,0.24,'sine'],[3,131,0.8,0.22,'sine'],
+    [4,110,0.8,0.28,'sine'],[5,110,0.4,0.18,'sine'],
+    [6,131,0.8,0.24,'sine'],[7,110,0.8,0.22,'sine'],
+    [8,110,0.8,0.28,'sine'],[9,110,0.4,0.18,'sine'],
+    [10,165,0.8,0.24,'sine'],[11,131,0.8,0.22,'sine'],
+    [12,110,0.8,0.28,'sine'],[13,110,0.4,0.18,'sine'],
+    [14,131,0.8,0.24,'sine'],[15,82,0.8,0.24,'sine'],
+    [16,110,0.8,0.28,'sine'],[17,110,0.4,0.18,'sine'],
+    [18,131,0.8,0.24,'sine'],[19,175,0.8,0.22,'sine'],
+    [20,110,0.8,0.28,'sine'],[21,110,0.4,0.18,'sine'],
+    [22,175,0.8,0.24,'sine'],[23,175,0.8,0.22,'sine'],
+    [24,131,0.8,0.28,'sine'],[25,131,0.4,0.18,'sine'],
+    [26,131,0.8,0.24,'sine'],[27,165,0.8,0.22,'sine'],
+    [28,196,0.8,0.28,'sine'],[29,196,0.4,0.18,'sine'],
+    [30,196,0.8,0.24,'sine'],[31,196,0.8,0.22,'sine'],
+    [32,110,0.8,0.30,'sine'],[33,110,0.4,0.20,'sine'],
+    [34,165,0.8,0.26,'sine'],[35,131,0.8,0.24,'sine'],
+    [36,110,0.8,0.30,'sine'],[37,110,0.4,0.20,'sine'],
+    [38,131,0.8,0.26,'sine'],[39,110,0.8,0.24,'sine'],
+    [40,110,0.8,0.30,'sine'],[41,110,0.4,0.20,'sine'],
+    [42,165,0.8,0.26,'sine'],[43,131,0.8,0.24,'sine'],
+    [44,110,0.8,0.30,'sine'],[45,110,0.4,0.20,'sine'],
+    [46,131,0.8,0.26,'sine'],[47,82,0.8,0.26,'sine'],
+    [48,175,0.8,0.28,'sine'],[49,175,0.4,0.18,'sine'],
+    [50,175,0.8,0.24,'sine'],[51,175,0.8,0.22,'sine'],
+    [52,131,0.8,0.28,'sine'],[53,131,0.4,0.18,'sine'],
+    [54,131,0.8,0.24,'sine'],[55,165,0.8,0.22,'sine'],
+    [56,196,0.8,0.30,'sine'],[57,196,0.4,0.20,'sine'],
+    [58,165,0.8,0.26,'sine'],[59,165,0.8,0.22,'sine'],
+    [60,110,0.8,0.30,'sine'],[61,110,0.4,0.20,'sine'],
+    [62,165,0.8,0.26,'sine'],[63,82,0.8,0.26,'sine'],
+    // ── パワーコード (square, 2拍ごとにスタブ) ──
+    [0,220,0.6,0.12,'square'],[0,330,0.6,0.08,'square'],
+    [2,220,0.5,0.10,'square'],[2,330,0.5,0.07,'square'],
+    [4,220,0.6,0.12,'square'],[4,330,0.6,0.08,'square'],
+    [6,262,0.5,0.10,'square'],[6,392,0.5,0.07,'square'],
+    [8,220,0.6,0.12,'square'],[8,330,0.6,0.08,'square'],
+    [10,220,0.5,0.10,'square'],[10,330,0.5,0.07,'square'],
+    [12,220,0.6,0.12,'square'],[12,330,0.6,0.08,'square'],
+    [14,196,0.5,0.10,'square'],[14,294,0.5,0.07,'square'],
+    [16,220,0.6,0.12,'square'],[16,330,0.6,0.08,'square'],
+    [18,262,0.5,0.10,'square'],[18,392,0.5,0.07,'square'],
+    [20,220,0.6,0.12,'square'],[20,330,0.6,0.08,'square'],
+    [22,175,0.5,0.10,'square'],[22,262,0.5,0.07,'square'],
+    [24,262,0.6,0.12,'square'],[24,392,0.6,0.08,'square'],
+    [26,262,0.5,0.10,'square'],[26,392,0.5,0.07,'square'],
+    [28,196,0.6,0.12,'square'],[28,294,0.6,0.08,'square'],
+    [30,220,0.5,0.10,'square'],[30,330,0.5,0.07,'square'],
+    [32,220,0.6,0.13,'square'],[32,330,0.6,0.09,'square'],
+    [34,220,0.5,0.11,'square'],[34,330,0.5,0.08,'square'],
+    [36,220,0.6,0.13,'square'],[36,330,0.6,0.09,'square'],
+    [38,262,0.5,0.11,'square'],[38,392,0.5,0.08,'square'],
+    [40,220,0.6,0.13,'square'],[40,330,0.6,0.09,'square'],
+    [42,220,0.5,0.11,'square'],[42,330,0.5,0.08,'square'],
+    [44,220,0.6,0.13,'square'],[44,330,0.6,0.09,'square'],
+    [46,196,0.5,0.11,'square'],[46,294,0.5,0.08,'square'],
+    [48,175,0.6,0.12,'square'],[48,262,0.6,0.08,'square'],
+    [50,175,0.5,0.10,'square'],[50,262,0.5,0.07,'square'],
+    [52,262,0.6,0.12,'square'],[52,392,0.6,0.08,'square'],
+    [54,262,0.5,0.10,'square'],[54,392,0.5,0.07,'square'],
+    [56,196,0.6,0.12,'square'],[56,294,0.6,0.08,'square'],
+    [58,196,0.5,0.10,'square'],[58,294,0.5,0.07,'square'],
+    [60,220,0.6,0.12,'square'],[60,330,0.6,0.08,'square'],
+    [62,220,0.5,0.10,'square'],[62,330,0.5,0.07,'square'],
+    // ── キック (4つ打ち! 全拍で踏む) ──
+    [0,55,0.5,0.32,'sine'],[2,55,0.4,0.28,'sine'],[4,55,0.5,0.32,'sine'],[6,55,0.4,0.28,'sine'],
+    [8,55,0.5,0.32,'sine'],[10,55,0.4,0.28,'sine'],[12,55,0.5,0.32,'sine'],[14,55,0.4,0.28,'sine'],
+    [16,55,0.5,0.32,'sine'],[18,55,0.4,0.28,'sine'],[20,55,0.5,0.32,'sine'],[22,55,0.4,0.28,'sine'],
+    [24,55,0.5,0.32,'sine'],[26,55,0.4,0.28,'sine'],[28,55,0.5,0.32,'sine'],[30,55,0.4,0.28,'sine'],
+    [32,55,0.5,0.34,'sine'],[34,55,0.4,0.30,'sine'],[36,55,0.5,0.34,'sine'],[38,55,0.4,0.30,'sine'],
+    [40,55,0.5,0.34,'sine'],[42,55,0.4,0.30,'sine'],[44,55,0.5,0.34,'sine'],[46,55,0.4,0.30,'sine'],
+    [48,55,0.5,0.34,'sine'],[50,55,0.4,0.30,'sine'],[52,55,0.5,0.34,'sine'],[54,55,0.4,0.30,'sine'],
+    [56,55,0.5,0.34,'sine'],[58,55,0.4,0.30,'sine'],[60,55,0.5,0.34,'sine'],[62,55,0.4,0.30,'sine'],
+    // ── スネア (2拍・4拍=8th grid 上の拍2,6,10...) ──
+    [2,190,0.4,0.16,'square'],[6,190,0.4,0.16,'square'],
+    [10,190,0.4,0.16,'square'],[14,190,0.4,0.16,'square'],
+    [18,190,0.4,0.16,'square'],[22,190,0.4,0.16,'square'],
+    [26,190,0.4,0.16,'square'],[30,190,0.4,0.16,'square'],
+    [34,190,0.4,0.17,'square'],[38,190,0.4,0.17,'square'],
+    [42,190,0.4,0.17,'square'],[46,190,0.4,0.17,'square'],
+    [50,190,0.4,0.17,'square'],[54,190,0.4,0.17,'square'],
+    [58,190,0.4,0.17,'square'],[62,190,0.4,0.17,'square'],
+    // ── ハイハット (全64拍=16分音符ビート感) ──
+    [0,3200,0.15,0.04,'square'],[1,3200,0.15,0.04,'square'],[2,3200,0.15,0.04,'square'],[3,3200,0.15,0.04,'square'],
+    [4,3200,0.15,0.04,'square'],[5,3200,0.15,0.04,'square'],[6,3200,0.15,0.04,'square'],[7,3200,0.15,0.04,'square'],
+    [8,3200,0.15,0.04,'square'],[9,3200,0.15,0.04,'square'],[10,3200,0.15,0.04,'square'],[11,3200,0.15,0.04,'square'],
+    [12,3200,0.15,0.04,'square'],[13,3200,0.15,0.04,'square'],[14,3200,0.15,0.04,'square'],[15,3200,0.15,0.04,'square'],
+    [16,3200,0.15,0.04,'square'],[17,3200,0.15,0.04,'square'],[18,3200,0.15,0.04,'square'],[19,3200,0.15,0.04,'square'],
+    [20,3200,0.15,0.04,'square'],[21,3200,0.15,0.04,'square'],[22,3200,0.15,0.04,'square'],[23,3200,0.15,0.04,'square'],
+    [24,3200,0.15,0.04,'square'],[25,3200,0.15,0.04,'square'],[26,3200,0.15,0.04,'square'],[27,3200,0.15,0.04,'square'],
+    [28,3200,0.15,0.04,'square'],[29,3200,0.15,0.04,'square'],[30,3200,0.15,0.04,'square'],[31,3200,0.15,0.04,'square'],
+    [32,3200,0.15,0.05,'square'],[33,3200,0.15,0.05,'square'],[34,3200,0.15,0.05,'square'],[35,3200,0.15,0.05,'square'],
+    [36,3200,0.15,0.05,'square'],[37,3200,0.15,0.05,'square'],[38,3200,0.15,0.05,'square'],[39,3200,0.15,0.05,'square'],
+    [40,3200,0.15,0.05,'square'],[41,3200,0.15,0.05,'square'],[42,3200,0.15,0.05,'square'],[43,3200,0.15,0.05,'square'],
+    [44,3200,0.15,0.05,'square'],[45,3200,0.15,0.05,'square'],[46,3200,0.15,0.05,'square'],[47,3200,0.15,0.05,'square'],
+    [48,3200,0.15,0.05,'square'],[49,3200,0.15,0.05,'square'],[50,3200,0.15,0.05,'square'],[51,3200,0.15,0.05,'square'],
+    [52,3200,0.15,0.05,'square'],[53,3200,0.15,0.05,'square'],[54,3200,0.15,0.05,'square'],[55,3200,0.15,0.05,'square'],
+    [56,3200,0.15,0.05,'square'],[57,3200,0.15,0.05,'square'],[58,3200,0.15,0.05,'square'],[59,3200,0.15,0.05,'square'],
+    [60,3200,0.15,0.05,'square'],[61,3200,0.15,0.05,'square'],[62,3200,0.15,0.05,'square'],[63,3200,0.15,0.05,'square'],
   ]),
 
   battle: _makeBgmSeq(60/155/2, 24, [
@@ -2716,22 +2800,22 @@ function _jkDrawBeam(ctx, W, H, fromLeft) {
 // グー: 太い一直線パワービーム
 function _jkBeamPower(ctx, col, x1, xEnd, x2, y, prog, t) {
   ctx.save();
-  ctx.shadowColor = col; ctx.shadowBlur = 36;
+  ctx.shadowColor = col; ctx.shadowBlur = 52;
   const g = ctx.createLinearGradient(x1, y, xEnd, y);
   g.addColorStop(0, col + 'ff'); g.addColorStop(0.8, col + 'cc'); g.addColorStop(1, '#ffffffff');
-  ctx.strokeStyle = g; ctx.lineWidth = 22; ctx.lineCap = 'round';
+  ctx.strokeStyle = g; ctx.lineWidth = 44; ctx.lineCap = 'round';
   ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, y); ctx.stroke();
-  ctx.strokeStyle = col + 'aa'; ctx.lineWidth = 14;
+  ctx.strokeStyle = col + 'aa'; ctx.lineWidth = 28;
   ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, y); ctx.stroke();
-  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 7;
+  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 14;
   ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, y); ctx.stroke();
   ctx.restore();
   if (prog >= 1 && Math.random() < 0.5) {
-    _jkParticle(x2, y, col, 4, 5, 12);
-    _jkParticle(x2, y, '#ffffff', 3, 6, 10);
+    _jkParticle(x2, y, col, 5, 6, 14);
+    _jkParticle(x2, y, '#ffffff', 4, 7, 12);
   }
   if (prog >= 1) {
-    const boom = Math.max(0, Math.sin((t - 25) / 20 * Math.PI)) * 38;
+    const boom = Math.max(0, Math.sin((t - 25) / 20 * Math.PI)) * 58;
     if (boom > 0) {
       ctx.save();
       const eg = ctx.createRadialGradient(x2, y, 0, x2, y, boom);
@@ -2742,38 +2826,62 @@ function _jkBeamPower(ctx, col, x1, xEnd, x2, y, prog, t) {
   }
 }
 
-// チョキ: 3本の斜めスラッシュビーム
+// チョキ: Phase1=突進線, Phase2=✕スラッシュ跡が着弾位置に出現
 function _jkBeamSlash(ctx, col, x1, x2, y, H, prog, t) {
-  const offsets = [-H * 0.055, 0, H * 0.055];
-  for (let i = 0; i < 3; i++) {
-    const sp = Math.min(Math.max(0, t - i * 5) / 22, 1);
-    if (sp <= 0) continue;
-    const yEnd = y + offsets[i] * sp;
-    const xEnd = x1 + (x2 - x1) * sp;
+  // Phase 1: 速い突進線 (t: 0→20)
+  if (t <= 32) {
+    const rushProg = Math.min(t / 20, 1);
+    const xr = x1 + (x2 - x1) * rushProg;
     ctx.save();
-    ctx.shadowColor = col; ctx.shadowBlur = 22;
-    const g = ctx.createLinearGradient(x1, y, xEnd, yEnd);
-    g.addColorStop(0, col + 'ff'); g.addColorStop(0.85, col + 'cc'); g.addColorStop(1, '#ffffffff');
-    ctx.strokeStyle = g; ctx.lineWidth = 14; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, yEnd); ctx.stroke();
-    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 5;
-    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, yEnd); ctx.stroke();
+    ctx.shadowColor = col; ctx.shadowBlur = 20;
+    ctx.strokeStyle = col + 'cc'; ctx.lineWidth = 10; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xr, y); ctx.stroke();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xr, y); ctx.stroke();
     ctx.restore();
   }
-  if (prog >= 1) {
-    const boom = Math.max(0, Math.sin((t - 22) / 18 * Math.PI)) * 32;
-    if (boom > 0) {
-      offsets.forEach(ya => { if (Math.random() < 0.4) _jkParticle(x2, y + ya, col, 3, 5, 10); });
-      ctx.save();
-      const eg = ctx.createRadialGradient(x2, y, 0, x2, y, boom);
-      eg.addColorStop(0, '#ffffff'); eg.addColorStop(0.5, col + '88'); eg.addColorStop(1, 'transparent');
-      ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(x2, y, boom, 0, Math.PI*2); ctx.fill();
-      ctx.restore();
-    }
+  // Phase 2: スラッシュ跡 (t >= 18) — 3本の斜めカット跡が着弾点に出現
+  if (t < 18) return;
+  const cutT = t - 18;
+  const fade = t > 46 ? Math.max(0, 1 - (t - 46) / 24) : 1;
+  const slashDefs = [
+    { ang: -Math.PI / 4,       len: H * 0.10, delay: 0  },
+    { ang:  Math.PI / 4,       len: H * 0.09, delay: 5  },
+    { ang: -Math.PI / 4 + 0.2, len: H * 0.08, delay: 9  },
+  ];
+  slashDefs.forEach(({ ang, len, delay }) => {
+    const sp = Math.max(0, Math.min((cutT - delay) / 10, 1));
+    if (sp <= 0) return;
+    const cos = Math.cos(ang), sin = Math.sin(ang);
+    const p1x = x2 - cos * len * sp, p1y = y - sin * len * sp;
+    const p2x = x2 + cos * len * sp, p2y = y + sin * len * sp;
+    ctx.save();
+    ctx.globalAlpha = fade;
+    ctx.shadowColor = col; ctx.shadowBlur = 32;
+    ctx.strokeStyle = col; ctx.lineWidth = 20; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(p1x, p1y); ctx.lineTo(p2x, p2y); ctx.stroke();
+    ctx.strokeStyle = col + 'bb'; ctx.lineWidth = 12;
+    ctx.beginPath(); ctx.moveTo(p1x, p1y); ctx.lineTo(p2x, p2y); ctx.stroke();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(p1x, p1y); ctx.lineTo(p2x, p2y); ctx.stroke();
+    ctx.restore();
+  });
+  if (cutT < 20 && Math.random() < 0.5) {
+    _jkParticle(x2, y, col, 4, 6, 14);
+    _jkParticle(x2, y, '#ffffff', 3, 5, 10);
+  }
+  const boom = Math.max(0, Math.sin(Math.min(cutT / 18, 1) * Math.PI)) * 46;
+  if (boom > 0) {
+    ctx.save();
+    ctx.globalAlpha = fade * 0.75;
+    const eg = ctx.createRadialGradient(x2, y, 0, x2, y, boom);
+    eg.addColorStop(0, '#ffffff'); eg.addColorStop(0.45, col + '99'); eg.addColorStop(1, 'transparent');
+    ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(x2, y, boom, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
   }
 }
 
-// パー: 扇形に広がる3本ビーム
+// パー: 扇形3本ビーム＋ギザギザ稲妻
 function _jkBeamSpread(ctx, col, x1, x2, y, H, prog, t) {
   const targets = [-H * 0.07, 0, H * 0.07];
   for (let i = 0; i < 3; i++) {
@@ -2782,20 +2890,41 @@ function _jkBeamSpread(ctx, col, x1, x2, y, H, prog, t) {
     const yEnd = y + targets[i] * sp;
     const xEnd = x1 + (x2 - x1) * sp;
     ctx.save();
-    ctx.shadowColor = col; ctx.shadowBlur = 20;
+    ctx.shadowColor = col; ctx.shadowBlur = 22;
     const g = ctx.createLinearGradient(x1, y, xEnd, yEnd);
     g.addColorStop(0, col + 'ff'); g.addColorStop(0.85, col + 'cc'); g.addColorStop(1, '#ffffffff');
     ctx.strokeStyle = g; ctx.lineWidth = 16; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, yEnd); ctx.stroke();
     ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 5;
     ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, yEnd); ctx.stroke();
+    // ビーム内ギザギザ稲妻 (2本)
+    const dx = xEnd - x1, dy = yEnd - y;
+    const blen = Math.sqrt(dx * dx + dy * dy);
+    if (blen > 0) {
+      const ux = dx / blen, uy = dy / blen;
+      const px = -uy, py = ux;
+      for (let b = 0; b < 2; b++) {
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.shadowBlur = 10;
+        ctx.beginPath(); ctx.moveTo(x1, y);
+        const steps = 7;
+        for (let s = 1; s <= steps; s++) {
+          const frac = s / steps;
+          if (frac > sp) break;
+          const bx = x1 + dx * frac, by = y + dy * frac;
+          const off = (Math.random() * 2 - 1) * 10;
+          ctx.lineTo(bx + px * off, by + py * off);
+        }
+        if (sp >= 1) ctx.lineTo(xEnd, yEnd);
+        ctx.stroke();
+      }
+    }
     ctx.restore();
   }
   if (prog >= 1) {
     targets.forEach(ya => {
-      const boom = Math.max(0, Math.sin((t - 25) / 18 * Math.PI)) * 26;
+      const boom = Math.max(0, Math.sin((t - 25) / 18 * Math.PI)) * 28;
       if (boom > 0) {
-        if (Math.random() < 0.4) _jkParticle(x2, y + ya, col, 3, 4, 10);
+        if (Math.random() < 0.4) _jkParticle(x2, y + ya, col, 3, 5, 11);
         ctx.save();
         const eg = ctx.createRadialGradient(x2, y + ya, 0, x2, y + ya, boom);
         eg.addColorStop(0, '#ffffff'); eg.addColorStop(0.5, col + '88'); eg.addColorStop(1, 'transparent');
@@ -2856,14 +2985,14 @@ function _jkDrawClash(ctx, W, H) {
     [[W*0.18, p1col], [W*0.82, p2col]].forEach(([sx, sc]) => {
       const xe = sx + (cx - sx) * prog;
       ctx.save();
-      ctx.shadowColor = sc; ctx.shadowBlur = 36;
+      ctx.shadowColor = sc; ctx.shadowBlur = 52;
       const g = ctx.createLinearGradient(sx, y, xe, y);
       g.addColorStop(0, sc+'ff'); g.addColorStop(1, '#ffffff');
-      ctx.strokeStyle = g; ctx.lineWidth = 22; ctx.lineCap = 'round';
+      ctx.strokeStyle = g; ctx.lineWidth = 44; ctx.lineCap = 'round';
       ctx.beginPath(); ctx.moveTo(sx, y); ctx.lineTo(xe, y); ctx.stroke();
-      ctx.strokeStyle = sc+'aa'; ctx.lineWidth = 14;
+      ctx.strokeStyle = sc+'aa'; ctx.lineWidth = 28;
       ctx.beginPath(); ctx.moveTo(sx, y); ctx.lineTo(xe, y); ctx.stroke();
-      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 7;
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 14;
       ctx.beginPath(); ctx.moveTo(sx, y); ctx.lineTo(xe, y); ctx.stroke();
       ctx.restore();
     });

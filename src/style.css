@@ -861,8 +861,8 @@ h1 {
   overflow:hidden;
   min-height:0;
 }
-.jk-char-wrap { width:34%;display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px;height:100%;transition:transform 0.05s linear; }
-.jk-char-wrap img { max-width:100%;max-height:clamp(180px,28vh,260px);object-fit:contain;align-self:flex-end; }
+.jk-char-wrap { width:40%;display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px;height:100%;transition:transform 0.05s linear; }
+.jk-char-wrap img { max-width:100%;max-height:clamp(200px,32vh,290px);object-fit:contain;align-self:flex-end; }
 #jk-p2-char-wrap img { transform:scaleX(-1); }
 #jk-field-center { flex:1;height:100%; }
 /* 手の表示バッジ */
