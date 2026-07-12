@@ -2796,7 +2796,7 @@ function _jkDraw() {
 
 function _jkDrawBeam(ctx, W, H, fromLeft) {
   const t = JK.animT;
-  const y = H * 0.55;
+  const y = H * 0.7;
   const p1h = HEROES[JK.p1HeroId];
   const col = fromLeft
     ? p1h.col
@@ -2961,7 +2961,7 @@ function _jkBeamSpread(ctx, col, x1, x2, y, H, prog, t) {
 
 function _jkDrawClash(ctx, W, H) {
   const t = JK.animT;
-  const y = H * 0.55;
+  const y = H * 0.7;
   const cx = W / 2;
   const p1col = HEROES[JK.p1HeroId].col;
   const p2col = JK.p2IsEnemy ? JK.boss.color : HEROES[JK.p2HeroId].col;
