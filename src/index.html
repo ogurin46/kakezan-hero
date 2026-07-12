@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>けいさんヒーロー</title>
   <!-- ?v= はキャッシュバスター: 更新時に数字を上げると全端末に即反映される -->
-  <link rel="stylesheet" href="style.css?v=25">
+  <link rel="stylesheet" href="style.css?v=26">
 </head>
 <body>
 <div id="app">
@@ -222,10 +222,21 @@
       </div>
       <!-- Canvas はフィールド全体を覆う -->
       <canvas id="jk-canvas"></canvas>
-      <!-- 手の表示バッジ -->
+      <!-- 選んだ手をキャラの上にオーバーレイ表示 -->
       <div id="jk-p1-hand-badge" class="jk-hand-badge"></div>
       <div id="jk-p2-hand-badge" class="jk-hand-badge jk-hand-badge-r"></div>
-      <!-- グーチョキパーボタン (キャラの上にオーバーレイ) -->
+      <!-- UIオーバーレイ -->
+      <div id="jk-countdown" class="hidden"></div>
+      <div id="jk-result-banner" class="hidden"></div>
+      <!-- とどめカットイン -->
+      <div id="jk-cutin" class="hidden">
+        <div class="jk-cutin-band"></div>
+        <div class="jk-cutin-face" id="jk-cutin-face"></div>
+        <div class="jk-cutin-text">とどめだ！！</div>
+      </div>
+    </div>
+    <!-- グーチョキパー選択ボタン (フィールド下部) -->
+    <div id="jk-controls">
       <div class="jk-ctrl-col" id="jk-p1-ctrl">
         <div class="jk-chosen" id="jk-p1-chosen">？</div>
         <div class="jk-hand-row" id="jk-p1-hand-btns">
@@ -241,15 +252,6 @@
           <button class="jk-hand" data-p="2" data-h="scissors">✌️<span>チョキ</span></button>
           <button class="jk-hand" data-p="2" data-h="paper">✋<span>パー</span></button>
         </div>
-      </div>
-      <!-- UIオーバーレイ -->
-      <div id="jk-countdown" class="hidden"></div>
-      <div id="jk-result-banner" class="hidden"></div>
-      <!-- とどめカットイン -->
-      <div id="jk-cutin" class="hidden">
-        <div class="jk-cutin-band"></div>
-        <div class="jk-cutin-face" id="jk-cutin-face"></div>
-        <div class="jk-cutin-text">とどめだ！！</div>
       </div>
     </div>
   </section>
@@ -292,6 +294,6 @@
   </section>
 
 </div>
-<script src="game.js?v=32"></script>
+<script src="game.js?v=33"></script>
 </body>
 </html>
