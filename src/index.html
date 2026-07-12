@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>けいさんヒーロー</title>
   <!-- ?v= はキャッシュバスター: 更新時に数字を上げると全端末に即反映される -->
-  <link rel="stylesheet" href="style.css?v=28">
+  <link rel="stylesheet" href="style.css?v=29">
 </head>
 <body>
 <div id="app">
@@ -142,6 +142,7 @@
       <div id="xp-gained"></div>
       <button id="btn-rhythm" class="big-btn rhythm-btn">🎵 ウルトラリズム！</button>
       <button id="btn-janken" class="big-btn janken-btn">✌️ じゃんけん！</button>
+      <button id="btn-memory" class="big-btn memory-btn">🃏 しんけいすいじゃく！</button>
       <button id="btn-next-stage" class="big-btn">つぎのステージへ ▶</button>
       <div class="clear-btn-row">
         <button id="btn-clear-retry" class="sub-btn">🔁 もういっかい</button>
@@ -269,6 +270,55 @@
     </div>
   </section>
 
+  <!-- 神経衰弱モード選択 -->
+  <section id="screen-memory-mode" class="screen hidden">
+    <div class="jk-mode-inner">
+      <p class="jk-mode-title">🃏 しんけいすいじゃく！</p>
+      <p class="jk-mode-enemy">ヒーローカードを そろえよう！</p>
+      <div class="jk-mode-btns">
+        <button id="btn-mem-1p" class="big-btn jk-mode-btn">
+          <div class="jk-mode-icon">🧑</div>
+          <div>ひとりで</div>
+        </button>
+        <button id="btn-mem-2p" class="big-btn jk-mode-btn">
+          <div class="jk-mode-icon">👥</div>
+          <div>ふたりで</div>
+        </button>
+      </div>
+      <button class="sub-btn" id="btn-mem-cancel">もどる</button>
+    </div>
+  </section>
+
+  <!-- 神経衰弱ゲーム -->
+  <section id="screen-memory" class="screen hidden">
+    <div id="mem-header">
+      <div class="mem-hcol" id="mem-p1-col">
+        <span class="mem-hlabel">P1</span>
+        <span class="mem-hscore" id="mem-p1-score">0</span>
+      </div>
+      <div id="mem-turn-banner">スタート！</div>
+      <div class="mem-hcol mem-hcol-r" id="mem-p2-col">
+        <span class="mem-hlabel">P2</span>
+        <span class="mem-hscore" id="mem-p2-score">0</span>
+      </div>
+    </div>
+    <div id="mem-grid"></div>
+    <div id="mem-message" class="hidden"></div>
+  </section>
+
+  <!-- 神経衰弱結果 -->
+  <section id="screen-memory-result" class="screen hidden">
+    <div class="jk-result-inner">
+      <div id="mem-result-icon" class="jk-final-icon"></div>
+      <p id="mem-result-title" class="jk-final-title"></p>
+      <p id="mem-result-detail" class="jk-final-score"></p>
+      <div class="jk-result-btns">
+        <button id="btn-mem-retry" class="big-btn">🔁 もういちど</button>
+        <button id="btn-mem-next" class="big-btn">つぎへ ▶</button>
+      </div>
+    </div>
+  </section>
+
   <!-- ゲームオーバー -->
   <section id="screen-gameover" class="screen hidden">
     <div class="result-content">
@@ -294,6 +344,6 @@
   </section>
 
 </div>
-<script src="game.js?v=36"></script>
+<script src="game.js?v=37"></script>
 </body>
 </html>

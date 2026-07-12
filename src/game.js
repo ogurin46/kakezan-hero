@@ -2097,6 +2097,16 @@ function initEvents() {
     btn.addEventListener('click', () => jkSelectHand(+btn.dataset.p, btn.dataset.h));
     btn.addEventListener('touchend', e => { e.preventDefault(); jkSelectHand(+btn.dataset.p, btn.dataset.h); });
   });
+  on('btn-memory',     () => startMemory());
+  on('btn-mem-cancel', () => { BGM.stop(); showScreen('screen-stage-clear'); BGM.play('title'); });
+  on('btn-mem-1p',     () => initMemoryGame('1p'));
+  on('btn-mem-2p',     () => initMemoryGame('2p'));
+  on('btn-mem-retry',  () => initMemoryGame(MEM ? MEM.mode : '1p'));
+  on('btn-mem-next',   () => {
+    MEM = null;
+    if (G.stage === 8 || G.stage >= 11) showVictory();
+    else startStage(G.stage + 1);
+  });
   on('btn-next-stage',   () => {
     if (G.stage === 8 || G.stage >= 11) showVictory();
     else startStage(G.stage+1);
@@ -3269,3 +3279,159 @@ window.addEventListener('DOMContentLoaded', () => {
   ['pointerdown', 'touchend', 'keydown'].forEach(ev =>
     document.addEventListener(ev, unlockAudio, { once: true, passive: true }));
 });
+
+// ─── 神経衰弱ゲーム ────────────────────────────────────────
+let MEM = null;
+
+function startMemory() {
+  showScreen('screen-memory-mode');
+  BGM.play('title');
+}
+
+function initMemoryGame(mode) {
+  // 全10ヒーローで20枚(10ペア)を用意してシャッフル
+  const cards = [];
+  HEROES.forEach((h, idx) => {
+    cards.push({ heroIdx: idx, pairId: idx });
+    cards.push({ heroIdx: idx, pairId: idx });
+  });
+  for (let i = cards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cards[i], cards[j]] = [cards[j], cards[i]];
+  }
+
+  MEM = {
+    mode, cards,
+    flipped: [],
+    matched: new Set(),
+    p1Score: 0, p2Score: 0,
+    turn: 1,
+    locked: false,
+    totalPairs: HEROES.length,
+  };
+
+  const p2col = $('mem-p2-col');
+  if (p2col) p2col.style.display = mode === '1p' ? 'none' : '';
+
+  showScreen('screen-memory');
+  BGM.play('title');
+  _memRenderGrid();
+  _memUpdateUI();
+}
+
+function _memRenderGrid() {
+  const grid = $('mem-grid');
+  grid.innerHTML = '';
+  MEM.cards.forEach((card, i) => {
+    const el = document.createElement('div');
+    el.className = 'mem-card';
+    const hero = HEROES[card.heroIdx];
+    el.innerHTML =
+      '<div class="mem-card-inner">' +
+        '<div class="mem-card-back">⭐</div>' +
+        '<div class="mem-card-front">' +
+          '<img src="img/' + hero.img + '" alt="' + hero.name + '" loading="lazy">' +
+          '<div class="mem-card-name">' + hero.name + '</div>' +
+        '</div>' +
+      '</div>';
+    el.addEventListener('click',    () => _memFlip(i));
+    el.addEventListener('touchend', e => { e.preventDefault(); _memFlip(i); });
+    grid.appendChild(el);
+  });
+}
+
+function _memFlip(idx) {
+  if (!MEM || MEM.locked) return;
+  if (MEM.flipped.includes(idx)) return;
+  if (MEM.matched.has(MEM.cards[idx].pairId)) return;
+
+  MEM.flipped.push(idx);
+  document.querySelectorAll('.mem-card')[idx].classList.add('flipped');
+  tone(440 + MEM.flipped.length * 110, 0.06, 0.13, 'triangle');
+
+  if (MEM.flipped.length === 2) {
+    MEM.locked = true;
+    setTimeout(_memCheckPair, 900);
+  }
+}
+
+function _memCheckPair() {
+  if (!MEM) return;
+  const [i1, i2] = MEM.flipped;
+  const c1 = MEM.cards[i1], c2 = MEM.cards[i2];
+  const cardEls = document.querySelectorAll('.mem-card');
+
+  if (c1.pairId === c2.pairId) {
+    MEM.matched.add(c1.pairId);
+    if (MEM.turn === 1) MEM.p1Score++; else MEM.p2Score++;
+    cardEls[i1].classList.add('matched');
+    cardEls[i2].classList.add('matched');
+    SFX.correct();
+    _memShowMsg(MEM.mode === '1p' ? 'ペア！' : 'P' + MEM.turn + ' ゲット！');
+    MEM.flipped = [];
+    MEM.locked = false;
+    _memUpdateUI();
+    if (MEM.matched.size === MEM.totalPairs) setTimeout(_memShowResult, 1000);
+  } else {
+    SFX.wrong();
+    setTimeout(() => {
+      if (!MEM) return;
+      cardEls[i1].classList.remove('flipped');
+      cardEls[i2].classList.remove('flipped');
+      MEM.flipped = [];
+      if (MEM.mode === '2p') MEM.turn = MEM.turn === 1 ? 2 : 1;
+      MEM.locked = false;
+      _memUpdateUI();
+    }, 500);
+  }
+}
+
+function _memUpdateUI() {
+  if (!MEM) return;
+  $('mem-p1-score').textContent = MEM.p1Score;
+  $('mem-p2-score').textContent = MEM.p2Score;
+  // アクティブプレイヤーをハイライト
+  $('mem-p1-score').classList.toggle('active', MEM.mode === '2p' && MEM.turn === 1);
+  $('mem-p2-score').classList.toggle('active', MEM.mode === '2p' && MEM.turn === 2);
+  const banner = $('mem-turn-banner');
+  if (MEM.mode === '1p') {
+    banner.textContent = MEM.matched.size + ' / ' + MEM.totalPairs + ' ペア';
+  } else {
+    banner.textContent = 'P' + MEM.turn + ' のばん！';
+  }
+  const p2col = $('mem-p2-col');
+  if (p2col) p2col.style.display = MEM.mode === '1p' ? 'none' : '';
+}
+
+function _memShowMsg(text) {
+  const el = $('mem-message');
+  if (!el) return;
+  el.textContent = text;
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 750);
+}
+
+function _memShowResult() {
+  BGM.stop();
+  let icon, title, detail;
+  if (MEM.mode === '1p') {
+    icon = '🏆'; title = 'クリア！';
+    detail = MEM.totalPairs + 'ペア ぜんぶ そろえた！';
+    SFX.stageClear();
+  } else if (MEM.p1Score > MEM.p2Score) {
+    icon = '🏆'; title = 'P1 のかち！';
+    detail = 'P1: ' + MEM.p1Score + 'ペア　P2: ' + MEM.p2Score + 'ペア';
+    SFX.stageClear();
+  } else if (MEM.p2Score > MEM.p1Score) {
+    icon = '🏅'; title = 'P2 のかち！';
+    detail = 'P1: ' + MEM.p1Score + 'ペア　P2: ' + MEM.p2Score + 'ペア';
+    SFX.stageClear();
+  } else {
+    icon = '🤝'; title = 'ひきわけ！';
+    detail = 'おたがい ' + MEM.p1Score + 'ペア';
+  }
+  showScreen('screen-memory-result');
+  $('mem-result-icon').textContent = icon;
+  $('mem-result-title').textContent = title;
+  $('mem-result-detail').textContent = detail;
+}
