@@ -822,9 +822,14 @@ h1 {
 .janken-btn { background: linear-gradient(135deg,#7c3aed,#4f46e5) !important; box-shadow: 0 6px 0 #3b0764 !important; margin-bottom: 6px; }
 .janken-btn:active { box-shadow: 0 3px 0 #3b0764 !important; }
 
-#screen-janken-mode, #screen-janken-hero, #screen-janken, #screen-janken-result {
+#screen-janken-mode, #screen-janken-hero, #screen-janken-result {
   background: linear-gradient(160deg, #1e1b4b 0%, #312e81 100%);
   color: #fff;
+}
+#screen-janken {
+  background: radial-gradient(ellipse at 50% 30%, #0c0830 0%, #030010 60%, #000005 100%);
+  color: #fff;
+  position: relative;
 }
 
 .jk-mode-inner { display:flex;flex-direction:column;align-items:center;gap:20px;padding:20px;height:100%;justify-content:center; }
@@ -973,28 +978,32 @@ h1 {
   100% { opacity:0; }
 }
 
-#jk-controls {
-  display:flex;width:100%;
-  background:rgba(0,0,0,.4);
-  border-top:2px solid rgba(255,255,255,.1);
-  flex-shrink:0;
+/* ぐーちょきぱーボタン: キャラクター上のオーバーレイ */
+.jk-ctrl-col {
+  position:absolute;bottom:4%;
+  width:40%;z-index:9;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:7px 4px;
+  background:rgba(0,0,0,.55);
+  border:1px solid rgba(255,255,255,.15);
+  backdrop-filter:blur(4px);
 }
-.jk-ctrl-col { flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 8px; }
-.jk-ctrl-col + .jk-ctrl-col { border-left:2px solid rgba(255,255,255,.15); }
-.jk-chosen { font-size:1.1rem;font-weight:900;min-height:1.4rem;color:#fbbf24; }
-.jk-hand-row { display:flex;gap:6px; }
+#jk-p1-ctrl { left:0;border-radius:0 10px 10px 0; }
+#jk-p2-ctrl { right:0;border-radius:10px 0 0 10px; }
+.jk-chosen { font-size:1.0rem;font-weight:900;min-height:1.2rem;color:#fbbf24; }
+.jk-hand-row { display:flex;gap:5px; }
 .jk-hand {
-  display:flex;flex-direction:column;align-items:center;gap:3px;
-  padding:8px 10px;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:6px 8px;
   border:2px solid rgba(255,255,255,.3);
-  border-radius:14px;
+  border-radius:12px;
   background:rgba(255,255,255,.08);
-  color:#fff;font-size:1.4rem;cursor:pointer;
+  color:#fff;font-size:1.3rem;cursor:pointer;
   transition:all .1s;
-  min-width:60px;
+  min-width:52px;
   -webkit-tap-highlight-color:transparent;
 }
-.jk-hand span { font-size:0.65rem;font-weight:700;color:#c4b5fd; }
+.jk-hand span { font-size:0.6rem;font-weight:700;color:#c4b5fd; }
 .jk-hand:hover { background:rgba(255,255,255,.2);border-color:#fbbf24; }
 .jk-hand:active { transform:scale(.92); }
 .jk-hand:disabled { opacity:.4;pointer-events:none; }

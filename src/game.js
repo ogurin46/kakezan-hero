@@ -2710,6 +2710,7 @@ function initJankenGame() {
 
   showScreen('screen-janken');
   BGM.play('janken');
+  spawnTitleStars('jk-stars');
 
   const cv = $('jk-canvas');
   const field = $('jk-field');
@@ -2881,48 +2882,52 @@ function _jkBeamSlash(ctx, col, x1, x2, y, H, prog, t) {
   }
 }
 
-// パー: 扇形3本ビーム＋ギザギザ稲妻
+// パー: 3本のギザギザ稲妻ビーム (扇形なし、ビーム自体がジグザグ)
 function _jkBeamSpread(ctx, col, x1, x2, y, H, prog, t) {
-  const targets = [-H * 0.07, 0, H * 0.07];
+  const yOffsets = [-H * 0.04, 0, H * 0.04];
+  const fullDx = x2 - x1;
   for (let i = 0; i < 3; i++) {
     const sp = Math.min(Math.max(0, t - i * 4) / 24, 1);
     if (sp <= 0) continue;
-    const yEnd = y + targets[i] * sp;
-    const xEnd = x1 + (x2 - x1) * sp;
-    ctx.save();
-    ctx.shadowColor = col; ctx.shadowBlur = 22;
-    const g = ctx.createLinearGradient(x1, y, xEnd, yEnd);
-    g.addColorStop(0, col + 'ff'); g.addColorStop(0.85, col + 'cc'); g.addColorStop(1, '#ffffffff');
-    ctx.strokeStyle = g; ctx.lineWidth = 16; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, yEnd); ctx.stroke();
-    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 5;
-    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, yEnd); ctx.stroke();
-    // ビーム内ギザギザ稲妻 (2本)
-    const dx = xEnd - x1, dy = yEnd - y;
-    const blen = Math.sqrt(dx * dx + dy * dy);
-    if (blen > 0) {
-      const ux = dx / blen, uy = dy / blen;
-      const px = -uy, py = ux;
-      for (let b = 0; b < 2; b++) {
-        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.shadowBlur = 10;
-        ctx.beginPath(); ctx.moveTo(x1, y);
-        const steps = 7;
-        for (let s = 1; s <= steps; s++) {
-          const frac = s / steps;
-          if (frac > sp) break;
-          const bx = x1 + dx * frac, by = y + dy * frac;
-          const off = (Math.random() * 2 - 1) * 10;
-          ctx.lineTo(bx + px * off, by + py * off);
-        }
-        if (sp >= 1) ctx.lineTo(xEnd, yEnd);
-        ctx.stroke();
-      }
+    const yo = yOffsets[i];
+    // ビーム進行方向に垂直なベクトル (わずかに傾いた方向に対して)
+    const fullLen = Math.sqrt(fullDx * fullDx + yo * yo);
+    const ux = fullDx / fullLen, uy = yo / fullLen;
+    const px = -uy, py = ux;
+    const xEnd = x1 + fullDx * sp, yEnd = y + yo * sp;
+    // ジグザグ座標を生成
+    const steps = 11;
+    const pts = [[x1, y]];
+    for (let s = 1; s < steps; s++) {
+      const frac = s / steps;
+      const bx = x1 + fullDx * frac * sp, by = y + yo * frac * sp;
+      const off = (Math.random() * 2 - 1) * 18;
+      pts.push([bx + px * off, by + py * off]);
     }
+    pts.push([xEnd, yEnd]);
+    ctx.save();
+    ctx.shadowColor = col; ctx.shadowBlur = 26;
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    // 外側グロー
+    ctx.strokeStyle = col + 'cc'; ctx.lineWidth = 16;
+    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let p = 1; p < pts.length; p++) ctx.lineTo(pts[p][0], pts[p][1]);
+    ctx.stroke();
+    // 中間グロー
+    ctx.strokeStyle = col + '88'; ctx.lineWidth = 9;
+    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let p = 1; p < pts.length; p++) ctx.lineTo(pts[p][0], pts[p][1]);
+    ctx.stroke();
+    // 白コア
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let p = 1; p < pts.length; p++) ctx.lineTo(pts[p][0], pts[p][1]);
+    ctx.stroke();
     ctx.restore();
   }
   if (prog >= 1) {
-    targets.forEach(ya => {
-      const boom = Math.max(0, Math.sin((t - 25) / 18 * Math.PI)) * 28;
+    yOffsets.forEach(ya => {
+      const boom = Math.max(0, Math.sin((t - 25) / 18 * Math.PI)) * 30;
       if (boom > 0) {
         if (Math.random() < 0.4) _jkParticle(x2, y + ya, col, 3, 5, 11);
         ctx.save();
@@ -2963,20 +2968,35 @@ function _jkDrawClash(ctx, W, H) {
       });
     });
   } else if (hand === 'paper') {
-    // 両サイドから扇形
-    [-H*0.07, 0, H*0.07].forEach((ya, i) => {
+    // 両サイドからギザギザ稲妻
+    [-H*0.04, 0, H*0.04].forEach((ya, i) => {
       const sp = Math.min(Math.max(0, t - i*4) / 24, 1);
       if (sp <= 0) return;
-      [[W*0.18, p1col, ya], [W*0.82, p2col, ya]].forEach(([sx, sc]) => {
-        const xe = sx + (cx - sx) * sp, ye = y + ya * sp;
+      [[W*0.18, p1col], [W*0.82, p2col]].forEach(([sx, sc]) => {
+        const totalDx = cx - sx, totalDy = ya;
+        const totalLen = Math.sqrt(totalDx*totalDx + totalDy*totalDy);
+        const ux = totalDx/totalLen, uy = totalDy/totalLen;
+        const px = -uy, py = ux;
+        const xe = sx + totalDx * sp, ye = y + ya * sp;
+        const steps = 9;
+        const pts = [[sx, y]];
+        for (let s = 1; s < steps; s++) {
+          const frac = s / steps;
+          const bx = sx + totalDx * frac * sp, by = y + ya * frac * sp;
+          pts.push([bx + px*(Math.random()*2-1)*16, by + py*(Math.random()*2-1)*16]);
+        }
+        pts.push([xe, ye]);
         ctx.save();
-        ctx.shadowColor = sc; ctx.shadowBlur = 18;
-        const g = ctx.createLinearGradient(sx, y, xe, ye);
-        g.addColorStop(0, sc+'ff'); g.addColorStop(1, '#ffffff');
-        ctx.strokeStyle = g; ctx.lineWidth = 14; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(sx, y); ctx.lineTo(xe, ye); ctx.stroke();
+        ctx.shadowColor = sc; ctx.shadowBlur = 24;
+        ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+        ctx.strokeStyle = sc+'cc'; ctx.lineWidth = 14;
+        ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+        for (let p = 1; p < pts.length; p++) ctx.lineTo(pts[p][0], pts[p][1]);
+        ctx.stroke();
         ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 5;
-        ctx.beginPath(); ctx.moveTo(sx, y); ctx.lineTo(xe, ye); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+        for (let p = 1; p < pts.length; p++) ctx.lineTo(pts[p][0], pts[p][1]);
+        ctx.stroke();
         ctx.restore();
       });
     });

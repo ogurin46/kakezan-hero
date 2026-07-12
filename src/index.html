@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>けいさんヒーロー</title>
   <!-- ?v= はキャッシュバスター: 更新時に数字を上げると全端末に即反映される -->
-  <link rel="stylesheet" href="style.css?v=23">
+  <link rel="stylesheet" href="style.css?v=24">
 </head>
 <body>
 <div id="app">
@@ -200,6 +200,7 @@
 
   <!-- じゃんけん本体 -->
   <section id="screen-janken" class="screen hidden">
+    <div class="title-bg-stars" id="jk-stars"></div>
     <div id="jk-header">
       <div class="jk-hcol">
         <span id="jk-p1-label" class="jk-label"></span>
@@ -224,17 +225,7 @@
       <!-- 手の表示バッジ -->
       <div id="jk-p1-hand-badge" class="jk-hand-badge"></div>
       <div id="jk-p2-hand-badge" class="jk-hand-badge jk-hand-badge-r"></div>
-      <!-- UIオーバーレイ -->
-      <div id="jk-countdown" class="hidden"></div>
-      <div id="jk-result-banner" class="hidden"></div>
-      <!-- とどめカットイン -->
-      <div id="jk-cutin" class="hidden">
-        <div class="jk-cutin-band"></div>
-        <div class="jk-cutin-face" id="jk-cutin-face"></div>
-        <div class="jk-cutin-text">とどめだ！！</div>
-      </div>
-    </div>
-    <div id="jk-controls">
+      <!-- グーチョキパーボタン (キャラの上にオーバーレイ) -->
       <div class="jk-ctrl-col" id="jk-p1-ctrl">
         <div class="jk-chosen" id="jk-p1-chosen">？</div>
         <div class="jk-hand-row" id="jk-p1-hand-btns">
@@ -250,6 +241,15 @@
           <button class="jk-hand" data-p="2" data-h="scissors">✌️<span>チョキ</span></button>
           <button class="jk-hand" data-p="2" data-h="paper">✋<span>パー</span></button>
         </div>
+      </div>
+      <!-- UIオーバーレイ -->
+      <div id="jk-countdown" class="hidden"></div>
+      <div id="jk-result-banner" class="hidden"></div>
+      <!-- とどめカットイン -->
+      <div id="jk-cutin" class="hidden">
+        <div class="jk-cutin-band"></div>
+        <div class="jk-cutin-face" id="jk-cutin-face"></div>
+        <div class="jk-cutin-text">とどめだ！！</div>
       </div>
     </div>
   </section>
@@ -292,6 +292,6 @@
   </section>
 
 </div>
-<script src="game.js?v=30"></script>
+<script src="game.js?v=31"></script>
 </body>
 </html>
