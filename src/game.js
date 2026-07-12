@@ -2073,7 +2073,11 @@ function on(id, fn) {
 function initEvents() {
   on('btn-name-confirm', () => confirmName());
   on('btn-hero-confirm', () => confirmHeroSelect());
-  on('btn-rhythm', () => startRhythmGame());
+  on('btn-bonus',        () => showScreen('screen-bonus-select'));
+  on('btn-bonus-back',   () => showScreen('screen-stage-clear'));
+  on('btn-bonus-rhythm', () => startRhythmGame());
+  on('btn-bonus-janken', () => startJanken());
+  on('btn-bonus-memory', () => startMemory());
   on('btn-rh-retry', () => startRhythmGame());
   on('btn-rh-next', () => {
     if (_rgTimer) { clearInterval(_rgTimer); _rgTimer = null; }
@@ -2081,8 +2085,7 @@ function initEvents() {
     if (G.stage === 8 || G.stage >= 11) showVictory();
     else startStage(G.stage + 1);
   });
-  on('btn-janken', () => startJanken());
-  on('btn-jk-cancel', () => { BGM.stop(); showScreen('screen-stage-clear'); });
+  on('btn-jk-cancel', () => { BGM.stop(); showScreen('screen-bonus-select'); });
   on('btn-jk-1p', () => { JK.mode = '1p'; JK.p2IsEnemy = true; initJankenGame(); });
   on('btn-jk-2p', () => showJankenHeroSelect(1));
   on('btn-jk-hs-confirm', () => confirmJkHero());
@@ -2097,8 +2100,7 @@ function initEvents() {
     btn.addEventListener('click', () => jkSelectHand(+btn.dataset.p, btn.dataset.h));
     btn.addEventListener('touchend', e => { e.preventDefault(); jkSelectHand(+btn.dataset.p, btn.dataset.h); });
   });
-  on('btn-memory',     () => startMemory());
-  on('btn-mem-cancel', () => { BGM.stop(); showScreen('screen-stage-clear'); BGM.play('title'); });
+  on('btn-mem-cancel', () => { BGM.stop(); showScreen('screen-bonus-select'); BGM.play('title'); });
   on('btn-mem-1p',     () => initMemoryGame('1p'));
   on('btn-mem-2p',     () => initMemoryGame('2p'));
   on('btn-mem-retry',  () => initMemoryGame(MEM ? MEM.mode : '1p'));
@@ -3330,7 +3332,7 @@ function _memRenderGrid() {
       '<div class="mem-card-inner">' +
         '<div class="mem-card-back">⭐</div>' +
         '<div class="mem-card-front">' +
-          '<img src="img/' + hero.img + '" alt="' + hero.name + '" loading="lazy">' +
+          '<img src="img/' + hero.img + '" alt="' + hero.name + '">' +
           '<div class="mem-card-name">' + hero.name + '</div>' +
         '</div>' +
       '</div>';

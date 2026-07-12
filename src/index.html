@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>けいさんヒーロー</title>
   <!-- ?v= はキャッシュバスター: 更新時に数字を上げると全端末に即反映される -->
-  <link rel="stylesheet" href="style.css?v=29">
+  <link rel="stylesheet" href="style.css?v=30">
 </head>
 <body>
 <div id="app">
@@ -140,15 +140,23 @@
       <div id="medal-result"></div>
       <div id="score-display"></div>
       <div id="xp-gained"></div>
-      <button id="btn-rhythm" class="big-btn rhythm-btn">🎵 ウルトラリズム！</button>
-      <button id="btn-janken" class="big-btn janken-btn">✌️ じゃんけん！</button>
-      <button id="btn-memory" class="big-btn memory-btn">🃏 しんけいすいじゃく！</button>
+      <button id="btn-bonus" class="big-btn bonus-btn">🎁 ごほうびゲーム！</button>
       <button id="btn-next-stage" class="big-btn">つぎのステージへ ▶</button>
       <div class="clear-btn-row">
         <button id="btn-clear-retry" class="sub-btn">🔁 もういっかい</button>
         <button id="btn-clear-home" class="sub-btn">ホームへ 🏠</button>
       </div>
     </div>
+  </section>
+
+  <!-- ごほうびゲーム選択 -->
+  <section id="screen-bonus-select" class="screen hidden">
+    <p class="bonus-title">🎁 ごほうびゲーム！</p>
+    <p class="bonus-sub">すきなゲームをえらんでね</p>
+    <button id="btn-bonus-rhythm" class="big-btn rhythm-btn">🎵 ウルトラリズム！</button>
+    <button id="btn-bonus-janken" class="big-btn janken-btn">✌️ じゃんけん！</button>
+    <button id="btn-bonus-memory" class="big-btn memory-btn">🃏 しんけいすいじゃく！</button>
+    <button id="btn-bonus-back" class="sub-btn">もどる</button>
   </section>
 
   <!-- ウルトラリズム -->
@@ -344,6 +352,6 @@
   </section>
 
 </div>
-<script src="game.js?v=37"></script>
+<script src="game.js?v=38"></script>
 </body>
 </html>
