@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>けいさんヒーロー</title>
   <!-- ?v= はキャッシュバスター: 更新時に数字を上げると全端末に即反映される -->
-  <link rel="stylesheet" href="style.css?v=20">
+  <link rel="stylesheet" href="style.css?v=21">
 </head>
 <body>
 <div id="app">
@@ -215,13 +215,20 @@
       <div id="jk-p1-char-wrap" class="jk-char-wrap">
         <img id="jk-p1-char" src="" alt="">
       </div>
-      <div id="jk-field-center">
-        <canvas id="jk-canvas"></canvas>
-        <div id="jk-countdown" class="hidden"></div>
-        <div id="jk-result-banner" class="hidden"></div>
-      </div>
+      <div id="jk-field-center"></div>
       <div id="jk-p2-char-wrap" class="jk-char-wrap">
         <img id="jk-p2-char" src="" alt="">
+      </div>
+      <!-- Canvas はフィールド全体を覆う -->
+      <canvas id="jk-canvas"></canvas>
+      <!-- UIオーバーレイ -->
+      <div id="jk-countdown" class="hidden"></div>
+      <div id="jk-result-banner" class="hidden"></div>
+      <!-- とどめカットイン -->
+      <div id="jk-cutin" class="hidden">
+        <div class="jk-cutin-band"></div>
+        <div class="jk-cutin-face" id="jk-cutin-face"></div>
+        <div class="jk-cutin-text">とどめだ！！</div>
       </div>
     </div>
     <div id="jk-controls">
@@ -282,6 +289,6 @@
   </section>
 
 </div>
-<script src="game.js?v=26"></script>
+<script src="game.js?v=27"></script>
 </body>
 </html>

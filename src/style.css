@@ -864,25 +864,99 @@ h1 {
 .jk-char-wrap { width:30%;display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px;height:100%; }
 .jk-char-wrap img { max-width:100%;max-height:160px;object-fit:contain;align-self:flex-end; }
 #jk-p2-char-wrap img { transform:scaleX(-1); }
-#jk-field-center { flex:1;height:100%;position:relative;display:flex;align-items:center;justify-content:center; }
-#jk-canvas { position:absolute;inset:0;width:100%;height:100%; }
+#jk-field-center { flex:1;height:100%; }
+/* Canvas は jk-field 全体を覆う（キャラの上に透明レイヤー） */
+#jk-canvas {
+  position:absolute;inset:0;width:100%;height:100%;
+  pointer-events:none;
+  z-index:5;
+}
 #jk-countdown {
-  position:relative;z-index:2;
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  z-index:10;
   font-size:clamp(3rem,12vw,6rem);
   font-weight:900;
   color:#fbbf24;
   text-shadow:0 0 30px #fbbf24,0 4px 0 rgba(0,0,0,.5);
   pointer-events:none;
+  white-space:nowrap;
 }
 #jk-result-banner {
-  position:relative;z-index:2;
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  z-index:10;
   font-size:clamp(1.2rem,5vw,1.8rem);font-weight:900;
   padding:12px 28px;border-radius:50px;
-  background:rgba(0,0,0,.6);
+  background:rgba(0,0,0,.7);
   border:3px solid #fbbf24;
   color:#fff;
   text-align:center;
   pointer-events:none;
+  white-space:nowrap;
+}
+/* 画面揺れ */
+@keyframes jk-screen-shake {
+  0%   { transform:translate(0,0) rotate(0); }
+  15%  { transform:translate(-9px,4px) rotate(-1.2deg); }
+  30%  { transform:translate(8px,-4px) rotate(1deg); }
+  48%  { transform:translate(-5px,3px) rotate(-0.6deg); }
+  65%  { transform:translate(5px,-2px) rotate(0.4deg); }
+  80%  { transform:translate(-2px,1px) rotate(0); }
+  100% { transform:translate(0,0) rotate(0); }
+}
+.jk-screen-shake { animation:jk-screen-shake 0.45s cubic-bezier(.36,.07,.19,.97); }
+/* とどめカットイン */
+#jk-cutin {
+  position:absolute;inset:0;z-index:30;
+  pointer-events:none;overflow:hidden;
+}
+.jk-cutin-band {
+  position:absolute;left:-10%;right:-10%;top:50%;
+  height:46%;
+  transform:translateY(-50%) skewY(-5deg);
+  background:linear-gradient(90deg,rgba(124,58,237,.93),rgba(37,99,235,.9),rgba(124,58,237,.93));
+  border-top:3px solid #fbbf24;
+  border-bottom:3px solid #fbbf24;
+  box-shadow:0 0 40px rgba(124,58,237,.6);
+  animation:jkCutinBand 2.3s ease-out forwards;
+}
+@keyframes jkCutinBand {
+  0%   { transform:translateY(-50%) skewY(-5deg) scaleX(0);opacity:1; }
+  13%  { transform:translateY(-50%) skewY(-5deg) scaleX(1);opacity:1; }
+  82%  { opacity:1; }
+  100% { opacity:0; }
+}
+.jk-cutin-face {
+  position:absolute;top:50%;left:50%;
+  width:48%;aspect-ratio:3/4;
+  background-size:contain;
+  background-repeat:no-repeat;
+  background-position:center bottom;
+  filter:drop-shadow(0 0 20px rgba(255,255,255,.85));
+  animation:jkCutinFace 2.3s cubic-bezier(.22,1,.36,1) forwards;
+}
+@keyframes jkCutinFace {
+  0%   { transform:translate(-260%,-50%) scale(0.8);opacity:0; }
+  18%  { transform:translate(-50%,-50%) scale(1.12);opacity:1; }
+  30%  { transform:translate(-50%,-50%) scale(1); }
+  82%  { transform:translate(-50%,-50%) scale(1);opacity:1; }
+  100% { transform:translate(-38%,-50%) scale(1.05);opacity:0; }
+}
+.jk-cutin-text {
+  position:absolute;top:72%;left:50%;
+  transform:translateX(-50%);
+  font-size:clamp(1.4rem,5vw,1.9rem);font-weight:900;color:#fff;
+  letter-spacing:.12em;white-space:nowrap;
+  text-shadow:0 0 16px rgba(250,204,21,.9),0 2px 0 rgba(0,0,0,.6),2px 2px 6px rgba(0,0,0,.8);
+  animation:jkCutinText 2.3s ease-out forwards;
+}
+@keyframes jkCutinText {
+  0%   { transform:translateX(-50%) scale(2.4);opacity:0; }
+  20%  { transform:translateX(-50%) scale(2.4);opacity:0; }
+  32%  { transform:translateX(-50%) scale(1);opacity:1; }
+  82%  { opacity:1; }
+  100% { opacity:0; }
 }
 
 #jk-controls {

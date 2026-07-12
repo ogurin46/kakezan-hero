@@ -1793,6 +1793,42 @@ const BGM_SEQS = {
     [16, 932,2,0.06,'triangle'], [24, 659,2,0.05,'triangle'],
   ]),
 
+  // じゃんけん専用BGM: G major / 168bpm / 明るく戦闘的
+  janken: _makeBgmSeq(60/168/2, 32, [
+    // ─ Melody (sawtooth, G major) ─
+    [0,  784,2,0.13,'sawtooth'], [2,  880,2,0.14,'sawtooth'],
+    [4,  988,4,0.15,'sawtooth'],
+    [8,  880,2,0.13,'sawtooth'], [10, 784,2,0.13,'sawtooth'],
+    [12, 659,4,0.14,'sawtooth'],
+    [16, 784,2,0.13,'sawtooth'], [18, 880,2,0.14,'sawtooth'],
+    [20, 740,2,0.13,'sawtooth'], [22, 659,2,0.12,'sawtooth'],
+    [24, 587,2,0.14,'sawtooth'], [26, 659,2,0.13,'sawtooth'],
+    [28, 740,4,0.15,'sawtooth'],
+    // ─ Counter (triangle) ─
+    [4,  392,2,0.07,'triangle'], [12, 330,2,0.07,'triangle'],
+    [20, 370,2,0.07,'triangle'], [28, 370,2,0.07,'triangle'],
+    // ─ Bass (sine) ─
+    [0,  196,2,0.22,'sine'], [4,  220,2,0.20,'sine'],
+    [8,  196,2,0.22,'sine'], [12, 165,2,0.20,'sine'],
+    [16, 196,2,0.22,'sine'], [20, 185,2,0.20,'sine'],
+    [24, 147,2,0.22,'sine'], [28, 185,2,0.20,'sine'],
+    // ─ Stabs (square) ─
+    [0,  392,1,0.11,'square'], [4,  494,1,0.10,'square'],
+    [8,  392,1,0.11,'square'], [12, 330,1,0.10,'square'],
+    [16, 392,1,0.11,'square'], [20, 370,1,0.10,'square'],
+    [24, 294,1,0.11,'square'], [28, 370,1,0.10,'square'],
+    // ─ Hi-hat (quarter-note grid) ─
+    [0, 1760,0.5,0.05,'square'], [4, 1760,0.5,0.05,'square'],
+    [8, 1760,0.5,0.05,'square'], [12,1760,0.5,0.05,'square'],
+    [16,1760,0.5,0.05,'square'], [20,1760,0.5,0.05,'square'],
+    [24,1760,0.5,0.05,'square'], [28,1760,0.5,0.05,'square'],
+    // ─ Off-beat snare (square) ─
+    [2, 220,0.5,0.08,'square'], [6, 220,0.5,0.08,'square'],
+    [10,220,0.5,0.08,'square'], [14,220,0.5,0.08,'square'],
+    [18,220,0.5,0.08,'square'], [22,220,0.5,0.08,'square'],
+    [26,220,0.5,0.08,'square'], [30,220,0.5,0.08,'square'],
+  ]),
+
   battle: _makeBgmSeq(60/155/2, 24, [
     // ─ Melody (sawtooth, A minor) ─
     [0,  440,2,0.12,'sawtooth'], [2,  523,1,0.11,'sawtooth'],
@@ -1895,7 +1931,7 @@ function initEvents() {
     else startStage(G.stage + 1);
   });
   on('btn-janken', () => startJanken());
-  on('btn-jk-cancel', () => showScreen('screen-stage-clear'));
+  on('btn-jk-cancel', () => { BGM.stop(); showScreen('screen-stage-clear'); });
   on('btn-jk-1p', () => { JK.mode = '1p'; JK.p2IsEnemy = true; initJankenGame(); });
   on('btn-jk-2p', () => showJankenHeroSelect(1));
   on('btn-jk-hs-confirm', () => confirmJkHero());
@@ -2541,10 +2577,12 @@ function initJankenGame() {
   _jkResetHands();
 
   showScreen('screen-janken');
+  BGM.play('janken');
 
   const cv = $('jk-canvas');
-  cv.width  = cv.clientWidth  * devicePixelRatio;
-  cv.height = cv.clientHeight * devicePixelRatio;
+  const field = $('jk-field');
+  cv.width  = field.clientWidth  * devicePixelRatio;
+  cv.height = field.clientHeight * devicePixelRatio;
 
   if (_jkTimer) clearInterval(_jkTimer);
   _jkTimer = setInterval(_jkDraw, 1000 / 60);
@@ -2562,9 +2600,11 @@ function _jkDraw() {
 
   if (JK.animState === 'beam_p1' || JK.animState === 'beam_p2') {
     _jkDrawBeam(ctx, W, H, JK.animState === 'beam_p1');
+    if (t === 28) _jkShake();
     if (t > 70) { JK.animState = 'idle'; _jkAfterAnim(); }
   } else if (JK.animState === 'clash') {
     _jkDrawClash(ctx, W, H);
+    if (t === 28) _jkShake();
     if (t > 80) { JK.animState = 'idle'; _jkAfterAnim(); }
   }
 
@@ -2582,14 +2622,16 @@ function _jkDraw() {
 
 function _jkDrawBeam(ctx, W, H, fromLeft) {
   const t = JK.animT;
-  const y = H * 0.5;
+  // キャラの胸あたりを狙う Y 座標（実測で画像上部40%がH*0.83付近）
+  const y = H * 0.83;
   const p1h = HEROES[JK.p1HeroId];
   const col = fromLeft
     ? p1h.col
     : (JK.p2IsEnemy ? JK.boss.color : HEROES[JK.p2HeroId].col);
 
-  const x1 = fromLeft ? W * 0.28 : W * 0.72;
-  const x2 = fromLeft ? W * 0.72 : W * 0.28;
+  // 左キャラ中心 = フィールド幅の15%、右キャラ中心 = 85%
+  const x1 = fromLeft ? W * 0.18 : W * 0.82;
+  const x2 = fromLeft ? W * 0.82 : W * 0.18;
   const prog = Math.min(t / 25, 1);
   const xEnd = x1 + (x2 - x1) * prog;
 
@@ -2622,7 +2664,7 @@ function _jkDrawBeam(ctx, W, H, fromLeft) {
 
 function _jkDrawClash(ctx, W, H) {
   const t = JK.animT;
-  const y = H * 0.5;
+  const y = H * 0.83;
   const cx = W / 2;
   const p1col = HEROES[JK.p1HeroId].col;
   const p2col = JK.p2IsEnemy ? JK.boss.color : HEROES[JK.p2HeroId].col;
@@ -2640,8 +2682,9 @@ function _jkDrawClash(ctx, W, H) {
     ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(xEnd, y); ctx.stroke();
     ctx.restore();
   };
-  drawSide(W * 0.28, p1col);
-  drawSide(W * 0.72, p2col);
+  // 両ビームをキャラ中心位置から中央に向かわせる
+  drawSide(W * 0.18, p1col);
+  drawSide(W * 0.82, p2col);
 
   if (prog >= 1) {
     const boomT = (t - 25) / 30;
@@ -2743,29 +2786,62 @@ function _jkReveal() {
 function _jkAfterAnim() {
   if (!JK) return;
   const res = JK.roundResult;
-  let bannerText;
-  if (res === 'p1') {
-    JK.p1Wins++;
-    bannerText = 'P1 の かち！';
-  } else if (res === 'p2') {
-    JK.p2Wins++;
-    bannerText = JK.mode === '1p' ? JK.boss.name + ' の かち！' : 'P2 の かち！';
-  } else {
-    bannerText = 'あいこ！';
-  }
-
-  const banner = $('jk-result-banner');
-  banner.textContent = bannerText;
-  banner.classList.remove('hidden');
+  if (res === 'p1') JK.p1Wins++;
+  else if (res === 'p2') JK.p2Wins++;
 
   _jkUpdateScore();
 
+  // P1が3勝目 → とどめカットイン後にファイナル
+  if (JK.p1Wins >= 3) {
+    _jkShowCutin(() => _jkShowFinal());
+    return;
+  }
+
+  // P2が3勝目 → バナーを出してファイナル
+  if (JK.p2Wins >= 3) {
+    const banner = $('jk-result-banner');
+    banner.textContent = JK.mode === '1p' ? JK.boss.name + ' の かち！' : 'P2 の かち！';
+    banner.classList.remove('hidden');
+    setTimeout(() => { if (!JK) return; banner.classList.add('hidden'); _jkShowFinal(); }, 1400);
+    return;
+  }
+
+  // ラウンド結果バナー
+  const banner = $('jk-result-banner');
+  banner.textContent = res === 'p1' ? 'P1 の かち！'
+    : res === 'p2' ? (JK.mode === '1p' ? JK.boss.name + ' の かち！' : 'P2 の かち！')
+    : 'あいこ！';
+  banner.classList.remove('hidden');
   setTimeout(() => {
     if (!JK) return;
     banner.classList.add('hidden');
-    if (JK.p1Wins >= 3 || JK.p2Wins >= 3) _jkShowFinal();
-    else _jkResetHands();
-  }, 1400);
+    _jkResetHands();
+  }, 1200);
+}
+
+function _jkShowCutin(onDone) {
+  const el = $('jk-cutin');
+  if (!el) { if (onDone) onDone(); return; }
+  const hero = HEROES[JK.p1HeroId];
+  const face = el.querySelector('.jk-cutin-face');
+  face.style.backgroundImage = `url("img/${hero.img}")`;
+  el.classList.remove('hidden');
+  el.querySelectorAll('.jk-cutin-band, .jk-cutin-face, .jk-cutin-text').forEach(n => {
+    n.style.animation = 'none'; void n.offsetWidth; n.style.animation = '';
+  });
+  clearTimeout(el._t);
+  el._t = setTimeout(() => {
+    el.classList.add('hidden');
+    if (onDone) onDone();
+  }, 2300);
+}
+
+function _jkShake() {
+  const el = $('screen-janken');
+  if (!el) return;
+  el.classList.remove('jk-screen-shake');
+  void el.offsetWidth;
+  el.classList.add('jk-screen-shake');
 }
 
 function _jkUpdateScore() {
@@ -2786,6 +2862,7 @@ function _jkResetHands() {
 
 function _jkShowFinal() {
   if (_jkTimer) { clearInterval(_jkTimer); _jkTimer = null; }
+  BGM.stop();
   const p1Won = JK.p1Wins >= 3;
   showScreen('screen-janken-result');
   $('jk-final-icon').textContent = p1Won ? '🏆' : (JK.mode === '2p' ? '🏅' : '💥');
