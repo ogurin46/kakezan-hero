@@ -2078,12 +2078,25 @@ function initEvents() {
   on('btn-bonus-rhythm', () => startRhythmGame());
   on('btn-bonus-janken', () => startJanken());
   on('btn-bonus-memory', () => startMemory());
+  on('btn-rh-back', () => {
+    if (_rgTimer) { clearInterval(_rgTimer); _rgTimer = null; }
+    RG = null;
+    BGM.stop();
+    showScreen('screen-bonus-select');
+    BGM.play('title');
+  });
   on('btn-rh-retry', () => startRhythmGame());
   on('btn-rh-next', () => {
     if (_rgTimer) { clearInterval(_rgTimer); _rgTimer = null; }
     RG = null;
     if (G.stage === 8 || G.stage >= 11) showVictory();
     else startStage(G.stage + 1);
+  });
+  on('btn-jk-back', () => {
+    if (_jkTimer) { clearInterval(_jkTimer); _jkTimer = null; }
+    JK = null;
+    BGM.stop();
+    showScreen('screen-bonus-select');
   });
   on('btn-jk-cancel', () => { BGM.stop(); showScreen('screen-bonus-select'); });
   on('btn-jk-1p', () => { JK.mode = '1p'; JK.p2IsEnemy = true; initJankenGame(); });
@@ -2099,6 +2112,12 @@ function initEvents() {
   document.querySelectorAll('.jk-hand').forEach(btn => {
     btn.addEventListener('click', () => jkSelectHand(+btn.dataset.p, btn.dataset.h));
     btn.addEventListener('touchend', e => { e.preventDefault(); jkSelectHand(+btn.dataset.p, btn.dataset.h); });
+  });
+  on('btn-mem-back', () => {
+    MEM = null;
+    BGM.stop();
+    showScreen('screen-bonus-select');
+    BGM.play('title');
   });
   on('btn-mem-cancel', () => { BGM.stop(); showScreen('screen-bonus-select'); BGM.play('title'); });
   on('btn-mem-1p',     () => initMemoryGame('1p'));

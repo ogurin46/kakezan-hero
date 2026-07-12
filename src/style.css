@@ -944,6 +944,25 @@ h1 {
   z-index:20;text-align:center;pointer-events:none;
 }
 
+/* ─── ゲーム中もどるボタン ─── */
+.game-back-btn {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 200;
+  background: rgba(0,0,0,0.55);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.game-back-btn:active { background: rgba(0,0,0,0.85); }
+
 /* ─── じゃんけん ─── */
 .janken-btn { background: linear-gradient(135deg,#7c3aed,#4f46e5) !important; box-shadow: 0 6px 0 #3b0764 !important; margin-bottom: 6px; }
 .janken-btn:active { box-shadow: 0 3px 0 #3b0764 !important; }
