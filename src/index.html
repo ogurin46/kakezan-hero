@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>けいさんヒーロー</title>
   <!-- ?v= はキャッシュバスター: 更新時に数字を上げると全端末に即反映される -->
-  <link rel="stylesheet" href="style.css?v=32">
+  <link rel="stylesheet" href="style.css?v=33">
 </head>
 <body>
 <div id="app">
@@ -210,9 +210,9 @@
 
   <!-- じゃんけん本体 -->
   <section id="screen-janken" class="screen hidden">
-    <button id="btn-jk-back" class="game-back-btn">← もどる</button>
     <div class="title-bg-stars" id="jk-stars"></div>
     <div id="jk-header">
+      <button id="btn-jk-back" class="game-back-btn">← もどる</button>
       <div class="jk-hcol">
         <span id="jk-p1-label" class="jk-label"></span>
         <span id="jk-p1-score" class="jk-score"></span>
@@ -301,8 +301,8 @@
 
   <!-- 神経衰弱ゲーム -->
   <section id="screen-memory" class="screen hidden">
-    <button id="btn-mem-back" class="game-back-btn">← もどる</button>
     <div id="mem-header">
+      <button id="btn-mem-back" class="game-back-btn">← もどる</button>
       <div class="mem-hcol" id="mem-p1-col">
         <span class="mem-hlabel">P1</span>
         <span class="mem-hscore" id="mem-p1-score">0</span>
@@ -355,6 +355,6 @@
   </section>
 
 </div>
-<script src="game.js?v=40"></script>
+<script src="game.js?v=41"></script>
 </body>
 </html>

@@ -862,8 +862,8 @@ h1 {
   overflow: hidden;
 }
 #mem-header {
-  display:flex;align-items:center;justify-content:space-between;
-  padding:8px 14px;
+  display:flex;align-items:center;justify-content:space-between;gap:6px;
+  padding:8px 10px;
   background:rgba(0,0,0,.45);
   border-bottom:2px solid rgba(255,255,255,.1);
   flex-shrink:0;
@@ -946,10 +946,6 @@ h1 {
 
 /* ─── ゲーム中もどるボタン ─── */
 .game-back-btn {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 200;
   background: rgba(0,0,0,0.55);
   border: 1px solid rgba(255,255,255,0.25);
   color: #fff;
@@ -960,8 +956,17 @@ h1 {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .game-back-btn:active { background: rgba(0,0,0,0.85); }
+/* ウルトラリズム: キャンバスのスコアが左にあるため右上に絶対配置 */
+#screen-rhythm .game-back-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 200;
+}
 
 /* ─── じゃんけん ─── */
 .janken-btn { background: linear-gradient(135deg,#7c3aed,#4f46e5) !important; box-shadow: 0 6px 0 #3b0764 !important; margin-bottom: 6px; }
@@ -992,7 +997,7 @@ h1 {
 #jk-hs-img { max-width:100%;max-height:100%;object-fit:contain; }
 
 #jk-header {
-  display:flex;align-items:center;justify-content:space-between;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
   padding:10px 16px;
   background:rgba(0,0,0,.35);
   width:100%;
