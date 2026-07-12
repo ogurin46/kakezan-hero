@@ -925,9 +925,13 @@ h1 {
 }
 .mem-card-front img { width:88%;flex:1;min-height:0;object-fit:contain; }
 .mem-card-name { font-size:clamp(0.5rem,2.2vw,0.7rem);font-weight:700;color:#c4b5fd;line-height:1;padding-bottom:2px; }
-.mem-card.matched .mem-card-front {
+.mem-card.matched-p1 .mem-card-front {
   border-color:#fbbf24;background:rgba(251,191,36,.08);
   box-shadow:0 0 10px #fbbf2466;
+}
+.mem-card.matched-p2 .mem-card-front {
+  border-color:#38bdf8;background:rgba(56,189,248,.08);
+  box-shadow:0 0 10px #38bdf866;
 }
 .mem-card:not(.flipped):not(.matched):active .mem-card-inner { transform:scale(0.94); }
 #mem-message {

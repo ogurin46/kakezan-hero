@@ -3366,8 +3366,9 @@ function _memCheckPair() {
   if (c1.pairId === c2.pairId) {
     MEM.matched.add(c1.pairId);
     if (MEM.turn === 1) MEM.p1Score++; else MEM.p2Score++;
-    cardEls[i1].classList.add('matched');
-    cardEls[i2].classList.add('matched');
+    const matchCls = 'matched-p' + MEM.turn;
+    cardEls[i1].classList.add('matched', matchCls);
+    cardEls[i2].classList.add('matched', matchCls);
     SFX.correct();
     _memShowMsg(MEM.mode === '1p' ? 'ペア！' : 'P' + MEM.turn + ' ゲット！');
     MEM.flipped = [];
